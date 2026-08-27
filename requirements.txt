@@ -1,0 +1,27 @@
+# Core data handling
+pandas>=2.0
+numpy>=1.24
+
+# Classical ML models & preprocessing
+scikit-learn>=1.3
+
+# Deep learning (1D CNN)
+tensorflow-cpu>=2.15
+
+# Plotting
+matplotlib>=3.7
+plotly>=5.18
+
+# Model / preprocessor persistence
+joblib>=1.3
+
+# Dashboard
+streamlit>=1.30
+
+# Optional: only needed if you want the notebook to download the dataset
+# directly from the UCI repository instead of using the local data/bank-full.csv
+ucimlrepo>=0.0.3
+
+# Optional: only needed to re-execute the notebook from the command line
+jupyter>=1.0
+nbformat>=5.9
