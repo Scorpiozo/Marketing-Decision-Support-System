@@ -1,0 +1,27 @@
+{
+  "n_train": 36168,
+  "n_test": 9043,
+  "n_features_after_encoding": 51,
+  "best_model_by_roc_auc": "Random Forest",
+  "best_model_by_recall": "Decision Tree (balanced)",
+  "best_model_by_f1": "1D CNN",
+  "production_model_used_for_final_output": "1D CNN",
+  "cnn_test_roc_auc": 0.9214547479738121,
+  "lead_temperature_counts": {
+    "COLD": 6739,
+    "HOT": 1349,
+    "WARM": 955
+  },
+  "interaction_pattern_counts": {
+    "No Previous Interaction": 5652,
+    "Repeatedly Contacted": 1905,
+    "Previously Unsuccessful": 890,
+    "Unclear": 319,
+    "Interested": 277
+  },
+  "contact_fatigue_counts": {
+    "LOW": 6000,
+    "MEDIUM": 1826,
+    "HIGH": 1217
+  }
+}

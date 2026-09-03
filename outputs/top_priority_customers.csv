@@ -1,0 +1,51 @@
+customer_record_id,age,job,balance,contact,campaign,previous,poutcome,conversion_probability,lead_temperature,interaction_pattern,contact_fatigue,recommendation,marital,education,default,housing,loan,day,month,duration,pdays
+7422,25,student,469,cellular,1,2,success,0.9942,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,single,secondary,no,no,no,24,feb,524,187
+7076,41,unemployed,0,cellular,1,3,success,0.9915,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,tertiary,no,no,no,29,apr,882,181
+8572,83,retired,4761,telephone,2,1,success,0.9885,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,tertiary,no,no,no,9,jun,294,93
+7,64,retired,109,cellular,1,2,success,0.9881,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,divorced,primary,no,no,no,23,jun,706,225
+1254,30,management,5359,cellular,1,3,success,0.9866,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,single,tertiary,no,no,no,26,feb,427,191
+8605,45,management,2724,cellular,2,1,success,0.9845,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,unknown,no,no,no,28,jun,359,182
+710,39,management,2939,cellular,1,2,success,0.9819,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,tertiary,no,no,no,29,jun,385,165
+3100,83,retired,4761,telephone,1,0,unknown,0.9813,HOT,No Previous Interaction,LOW,High conversion probability - prioritize follow-up soon.,married,tertiary,no,no,no,8,mar,659,-1
+8311,53,management,1624,cellular,3,3,success,0.9776,HOT,Interested,MEDIUM,Prioritize follow-up soon - strong positive signal.,married,tertiary,no,no,no,30,apr,284,84
+6330,56,management,4623,cellular,1,1,success,0.9772,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,unknown,no,no,no,25,feb,305,192
+2984,24,management,1506,cellular,2,4,success,0.9764,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,single,tertiary,no,no,no,12,jun,239,95
+2455,30,management,572,cellular,3,2,success,0.9758,HOT,Interested,MEDIUM,Prioritize follow-up soon - strong positive signal.,single,tertiary,no,no,no,17,jun,339,183
+3850,48,unemployed,926,cellular,4,6,success,0.9745,HOT,Unclear,MEDIUM,High conversion probability - prioritize follow-up soon.,married,secondary,no,no,no,15,feb,382,185
+7695,23,student,381,cellular,1,2,other,0.9745,HOT,Unclear,LOW,High conversion probability - prioritize follow-up soon.,single,secondary,no,no,no,23,feb,696,189
+5383,35,blue-collar,262,cellular,1,3,success,0.9743,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,secondary,no,no,no,15,mar,427,181
+1544,72,retired,5715,cellular,1,2,success,0.9743,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,secondary,no,no,no,17,may,1114,181
+6785,59,unemployed,1047,cellular,1,3,success,0.9736,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,secondary,no,no,no,21,aug,438,184
+2807,34,blue-collar,368,cellular,1,0,unknown,0.9735,HOT,No Previous Interaction,LOW,High conversion probability - prioritize follow-up soon.,divorced,secondary,no,no,yes,7,jul,2201,-1
+5183,67,retired,704,cellular,1,3,success,0.9727,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,divorced,secondary,no,no,no,6,may,613,87
+765,57,management,10583,cellular,3,3,success,0.9723,HOT,Interested,MEDIUM,Prioritize follow-up soon - strong positive signal.,married,tertiary,no,no,no,28,sep,341,98
+4632,75,retired,291,cellular,1,2,success,0.9721,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,secondary,no,no,no,12,aug,350,182
+2482,28,student,1925,cellular,1,3,success,0.9712,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,single,secondary,no,no,no,26,feb,139,93
+1623,54,technician,3994,cellular,2,2,success,0.971,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,secondary,no,no,yes,20,oct,595,187
+3194,33,management,224,cellular,2,4,success,0.9702,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,single,tertiary,no,no,no,23,sep,409,92
+352,79,retired,2787,telephone,1,1,success,0.9699,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,divorced,primary,no,no,no,13,jul,617,377
+2399,20,student,215,cellular,1,6,success,0.9692,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,single,secondary,no,no,no,24,feb,175,92
+1698,26,admin.,760,cellular,2,5,success,0.9692,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,single,tertiary,no,yes,no,4,mar,456,281
+6179,68,retired,1146,cellular,2,3,success,0.9687,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,secondary,no,no,no,3,mar,153,110
+6091,22,student,4038,cellular,1,0,unknown,0.9685,HOT,No Previous Interaction,LOW,High conversion probability - prioritize follow-up soon.,single,secondary,no,yes,no,15,may,1380,-1
+7300,68,retired,2027,cellular,2,4,success,0.967,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,divorced,primary,no,no,no,14,sep,404,91
+4432,60,retired,523,cellular,1,3,success,0.9666,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,secondary,no,no,no,11,feb,467,182
+8205,33,unemployed,1211,cellular,1,1,success,0.9663,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,secondary,no,no,no,11,feb,535,188
+666,30,admin.,1310,telephone,1,0,unknown,0.966,HOT,No Previous Interaction,LOW,High conversion probability - prioritize follow-up soon.,married,secondary,no,no,no,27,oct,3284,-1
+7197,74,retired,1413,cellular,2,0,unknown,0.9659,HOT,No Previous Interaction,LOW,High conversion probability - prioritize follow-up soon.,married,primary,no,no,no,25,feb,385,-1
+2694,32,admin.,35,cellular,3,3,success,0.9657,HOT,Interested,MEDIUM,Prioritize follow-up soon - strong positive signal.,married,secondary,no,no,no,17,dec,324,126
+5145,36,management,2161,cellular,2,5,success,0.965,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,tertiary,no,no,no,8,sep,708,183
+7290,48,management,5689,cellular,2,1,success,0.9649,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,single,tertiary,no,no,no,26,may,527,103
+3316,44,management,483,cellular,2,6,success,0.9648,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,single,tertiary,no,no,no,6,mar,207,199
+602,33,technician,4401,cellular,1,0,unknown,0.9646,HOT,No Previous Interaction,LOW,High conversion probability - prioritize follow-up soon.,married,tertiary,no,no,no,30,apr,439,-1
+3123,29,management,2753,cellular,1,0,unknown,0.9645,HOT,No Previous Interaction,LOW,High conversion probability - prioritize follow-up soon.,single,tertiary,no,no,no,30,apr,645,-1
+8713,27,blue-collar,644,cellular,1,1,success,0.9639,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,single,tertiary,no,no,no,2,jun,657,182
+6485,21,student,123,telephone,1,1,success,0.9633,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,single,secondary,no,no,no,11,nov,513,91
+4639,78,retired,4807,telephone,2,4,success,0.9632,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,unknown,no,no,no,3,feb,892,104
+7971,31,management,3384,cellular,3,3,success,0.9631,HOT,Interested,MEDIUM,Prioritize follow-up soon - strong positive signal.,single,tertiary,no,no,no,22,mar,247,187
+9020,30,management,314,cellular,2,2,success,0.963,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,tertiary,no,no,no,19,nov,364,175
+1658,58,management,2155,cellular,2,7,success,0.9621,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,secondary,no,no,yes,11,aug,248,182
+4732,32,services,914,cellular,1,1,success,0.962,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,secondary,no,no,no,29,dec,434,197
+348,48,unemployed,926,cellular,2,10,success,0.961,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,married,secondary,no,no,no,12,aug,504,178
+1068,26,blue-collar,941,cellular,1,0,unknown,0.9605,HOT,No Previous Interaction,LOW,High conversion probability - prioritize follow-up soon.,single,primary,no,no,no,29,jan,1165,-1
+4735,29,management,1445,cellular,2,2,success,0.9604,HOT,Interested,LOW,Prioritize follow-up soon - strong positive signal.,single,tertiary,no,no,no,26,apr,328,143

@@ -23,10 +23,6 @@ env/
 .DS_Store
 Thumbs.db
 
-# Generated model/output files
-models/
-outputs/
-
 # Python tooling
 .pytest_cache/
 .mypy_cache/
