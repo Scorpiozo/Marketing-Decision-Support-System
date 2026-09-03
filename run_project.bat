@@ -1,13 +1,13 @@
 @echo off
-REM ============================================================
+REM
 REM  Bank Marketing Decision Support System - Windows launcher
-REM ============================================================
+REM
 REM  This script:
 REM    1. Creates/activates a Python virtual environment (optional)
 REM    2. Installs dependencies from requirements.txt
 REM    3. Runs the full training + evaluation pipeline
 REM    4. Launches the Streamlit dashboard
-REM ============================================================
+REM
 
 echo.
 echo === Step 1: Installing dependencies ===

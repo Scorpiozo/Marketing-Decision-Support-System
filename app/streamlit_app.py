@@ -24,9 +24,9 @@ PREDICTIONS_PATH = os.path.join(PROJECT_ROOT, "outputs", "final_predictions.csv"
 TOP_PRIORITY_PATH = os.path.join(PROJECT_ROOT, "outputs", "top_priority_customers.csv")
 MODEL_COMPARISON_PATH = os.path.join(PROJECT_ROOT, "outputs", "model_comparison.csv")
 
-# ---------------------------------------------------------------------------
+#
 # Colour palette
-# ---------------------------------------------------------------------------
+#
 NAVY = "#1B2631"
 NAVY_DARK = "#102746"
 
@@ -47,16 +47,14 @@ WARM = "#B8934B"
 BRICK = "#7B2D26"
 
 
-# ---------------------------------------------------------------------------
+#
 # Global styling
-# ---------------------------------------------------------------------------
+#
 st.markdown(
     f"""
     <style>
 
-    /* =========================================================
-       GLOBAL
-       ========================================================= */
+    /* GLOBAL */
 
     .stApp {{
         background: {CREAM_LIGHT};
@@ -105,9 +103,7 @@ st.markdown(
     }}
 
 
-    /* =========================================================
-       SIDEBAR
-       ========================================================= */
+    /* SIDEBAR */
 
     section[data-testid="stSidebar"] {{
         background: {NAVY};
@@ -148,9 +144,7 @@ st.markdown(
     }}
 
 
-    /* =========================================================
-       SIDEBAR NAVIGATION
-       ========================================================= */
+    /* SIDEBAR NAVIGATION */
 
     section[data-testid="stSidebar"] [role="radiogroup"] {{
         gap: 0.15rem;
@@ -198,9 +192,7 @@ st.markdown(
     }}
 
 
-    /* =========================================================
-       SIDEBAR DIVIDERS
-       ========================================================= */
+    /* SIDEBAR DIVIDERS */
 
     section[data-testid="stSidebar"] hr {{
         border: none;
@@ -209,9 +201,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        SIDEBAR FILTER LABELS
-       ========================================================= */
+    */
 
     section[data-testid="stSidebar"]
     [data-testid="stWidgetLabel"] {{
@@ -227,9 +219,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        SIDEBAR SELECTS
-       ========================================================= */
+    */
 
     section[data-testid="stSidebar"]
     [data-baseweb="select"] > div {{
@@ -268,9 +260,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        MULTISELECT TAGS
-       ========================================================= */
+    */
 
     section[data-testid="stSidebar"]
     [data-baseweb="tag"] {{
@@ -285,9 +277,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        RESET BUTTON
-       ========================================================= */
+    */
 
     section[data-testid="stSidebar"] .stButton > button {{
         width: 100%;
@@ -310,9 +302,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        MAIN HEADER
-       ========================================================= */
+    */
 
     .dss-header {{
         position: relative;
@@ -365,9 +357,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        PAGE SUBHEADINGS
-       ========================================================= */
+    */
 
     .stApp h3 {{
         margin-top: 0.5rem;
@@ -380,9 +372,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        METRIC CARDS
-       ========================================================= */
+    */
 
     .metric-card {{
         background: {WHITE};
@@ -439,9 +431,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        INFO CARDS
-       ========================================================= */
+    */
 
     .info-card {{
         background: {WHITE};
@@ -461,11 +453,11 @@ st.markdown(
     .info-card .metric-value {{
         color: {NAVY} !important;
     }}
+    
 
-
-    /* =========================================================
+    /*
        BADGES
-       ========================================================= */
+    */
 
     .badge {{
         display: inline-block;
@@ -507,9 +499,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        RECOMMENDATION BOX
-       ========================================================= */
+    */
 
     .recommendation-box {{
         background: #F2EFE7;
@@ -534,9 +526,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        STREAMLIT ALERTS
-       ========================================================= */
+    */
 
     div[data-testid="stAlert"] {{
         border-radius: 7px;
@@ -544,9 +536,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        DATAFRAME
-       ========================================================= */
+    */
 
     div[data-testid="stDataFrame"] {{
         border: 1px solid {BORDER};
@@ -555,9 +547,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        STANDARD BUTTONS
-       ========================================================= */
+    */
 
     .stButton > button {{
         background: {NAVY};
@@ -576,9 +568,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        DOWNLOAD BUTTON
-       ========================================================= */
+    */
 
     .stDownloadButton > button {{
         background: {TEAL};
@@ -596,9 +588,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        FORM SUBMIT BUTTON
-       ========================================================= */
+    */
 
     button[kind="primary"] {{
         background: {TEAL} !important;
@@ -614,9 +606,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        EXPANDERS
-       ========================================================= */
+    */
 
     div[data-testid="stExpander"] {{
         background: {WHITE};
@@ -633,9 +625,9 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        INPUTS IN MAIN CONTENT
-       ========================================================= */
+    */
 
     .stTextInput input,
     .stNumberInput input,
@@ -652,18 +644,18 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        MAIN SELECTBOXES
-       ========================================================= */
+    */
 
     [data-baseweb="select"] > div {{
         border-radius: 6px !important;
     }}
 
 
-    /* =========================================================
+    /*
        DIVIDERS
-       ========================================================= */
+    */
 
     hr {{
         border: none;
@@ -672,18 +664,18 @@ st.markdown(
     }}
 
 
-    /* =========================================================
+    /*
        PLOTLY CONTAINERS
-       ========================================================= */
+    */
 
     .js-plotly-plot {{
         border-radius: 8px;
     }}
 
 
-    /* =========================================================
+    /*
        MOBILE / SMALL SCREENS
-       ========================================================= */
+    */
 
     @media (max-width: 900px) {{
         .block-container {{
@@ -1168,9 +1160,15 @@ def page_actionable_targeting(pred_df, top_df, filters):
     fig.update_layout(
         font=PLOTLY_FONT, plot_bgcolor="white", paper_bgcolor="white",
         margin=dict(t=10, l=10, r=10, b=10), height=280,
-        yaxis=dict(autorange="reversed"),
+        yaxis=dict(autorange="reversed", tickfont=dict(size=12, color=TEXT_DARK)),
     )
-    fig.update_xaxes(gridcolor="#e9e2cf", title="Customers")
+    fig.update_xaxes(
+        gridcolor="#e9e2cf", 
+        title=dict(text="Customers", font=dict(size=13, color=TEXT_DARK)),
+        tickfont=dict(size=12, color=TEXT_DARK),
+        linecolor="#C9CDD3",
+        tickcolor="#C9CDD3",
+    )
     st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -1197,68 +1195,430 @@ def page_actionable_targeting(pred_df, top_df, filters):
 
 def page_customer_analysis(df):
     render_header()
+
     st.subheader("Customer Lookup")
-    st.caption("Look up one test-set customer's full decision profile (model-predicted).")
-
-    filt_col1, filt_col2 = st.columns([1, 1])
-    with filt_col1:
-        temp_filter = st.selectbox("Filter by lead temperature", ["All", "HOT", "WARM", "COLD"])
-    with filt_col2:
-        fatigue_filter = st.selectbox("Filter by contact fatigue", ["All", "LOW", "MEDIUM", "HIGH"])
-
-    filtered = df.copy()
-    if temp_filter != "All":
-        filtered = filtered[filtered["lead_temperature"] == temp_filter]
-    if fatigue_filter != "All":
-        filtered = filtered[filtered["contact_fatigue"] == fatigue_filter]
-
-    if filtered.empty:
-        st.warning("No customers match this filter combination.")
-        return
-
-    record_id = st.selectbox("Select a Customer Record ID", filtered["customer_record_id"].tolist())
-    row = df[df["customer_record_id"] == record_id].iloc[0]
-
-    st.markdown(f"### Customer Record #{record_id}")
     st.caption(
-        "Customer Record ID is generated by this project for demonstration "
-        "purposes - the UCI dataset does not provide a real customer identifier."
+        "Search and filter test-set customers using their model-predicted "
+        "decision profiles. All filters are applied together."
     )
 
-    info_col, decision_col = st.columns([1, 1.3])
+    # =========================================================
+    # SEARCH & FILTERS
+    # =========================================================
+    st.markdown("#### Search & Filters")
 
-    with info_col:
-        st.markdown('<div class="info-card">', unsafe_allow_html=True)
-        st.markdown("#### Customer Information")
-        st.write(f"**Age:** {row['age']}")
-        st.write(f"**Job:** {row['job']}")
-        st.write(f"**Marital status:** {row.get('marital', 'n/a')}")
-        st.write(f"**Balance:** {row['balance']}")
-        st.write(f"**Contact type:** {row['contact']}")
-        st.write(f"**Contacts (current campaign):** {row['campaign']}")
-        st.write(f"**Contacts (previous campaigns):** {row['previous']}")
-        st.write(f"**Previous campaign outcome:** {row['poutcome']}")
-        st.markdown("</div>", unsafe_allow_html=True)
+    search_col, temp_col, fatigue_col = st.columns([1.6, 1, 1])
 
-    with decision_col:
-        st.markdown('<div class="info-card">', unsafe_allow_html=True)
-        st.markdown("#### Model Prediction")
-        st.metric("Conversion probability", f"{row['conversion_probability']*100:.1f}%")
-        st.markdown(f"**Lead Temperature:** {lead_badge_html(row['lead_temperature'])}", unsafe_allow_html=True)
+    with search_col:
+        record_id_search = st.text_input(
+            "Customer Record ID",
+            placeholder="Search by Customer Record ID...",
+        )
 
-        st.markdown("#### Interaction Pattern")
-        st.info(row["interaction_pattern"])
+    with temp_col:
+        temp_filter = st.selectbox(
+            "Lead Temperature",
+            ["All", "HOT", "WARM", "COLD"],
+        )
 
-        st.markdown("#### Contact Fatigue")
-        st.markdown(fatigue_badge_html(row["contact_fatigue"]), unsafe_allow_html=True)
+    with fatigue_col:
+        fatigue_filter = st.selectbox(
+            "Contact Fatigue",
+            ["All", "LOW", "MEDIUM", "HIGH"],
+        )
 
-        st.markdown("#### Recommendation")
-        st.markdown(f'<div class="recommendation-box">{row["recommendation"]}</div>', unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+    # =========================================================
+    # APPLY FILTERS
+    # =========================================================
+    filtered = df.copy()
+
+    if temp_filter != "All":
+        filtered = filtered[
+            filtered["lead_temperature"]
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            == temp_filter
+        ]
+
+    if fatigue_filter != "All":
+        filtered = filtered[
+            filtered["contact_fatigue"]
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            == fatigue_filter
+        ]
+
+    if record_id_search.strip():
+        search_value = record_id_search.strip().lower()
+
+        filtered = filtered[
+            filtered["customer_record_id"]
+            .astype(str)
+            .str.strip()
+            .str.lower()
+            .str.contains(search_value, na=False)
+        ]
+
+    # =========================================================
+    # RESULTS
+    # =========================================================
+    st.markdown("---")
+
+    if filtered.empty:
+        if record_id_search.strip():
+            st.warning(
+                f"Customer Record ID '{record_id_search.strip()}' "
+                "was not found with the selected filters."
+            )
+        else:
+            st.warning(
+                "No customers match the selected filters. "
+                "Try changing the filters."
+            )
+        return
+
+    st.markdown(
+        f"### Customer Results ({len(filtered):,})"
+    )
+
+    active_filters = []
+
+    if temp_filter != "All":
+        active_filters.append(f"Temperature: **{temp_filter}**")
+
+    if fatigue_filter != "All":
+        active_filters.append(f"Fatigue: **{fatigue_filter}**")
+
+    if record_id_search.strip():
+        active_filters.append(
+            f"Customer ID: **{record_id_search.strip()}**"
+        )
+
+    if active_filters:
+        st.caption(" • ".join(active_filters))
+    else:
+        st.caption("Showing all customers.")
+
+    # =========================================================
+    # CUSTOMER RECORDS
+    # =========================================================
+    for _, row in filtered.iterrows():
+
+        record_id = row["customer_record_id"]
+        probability = float(row["conversion_probability"])
+        temperature = str(row["lead_temperature"])
+        fatigue = str(row["contact_fatigue"])
+
+        # -----------------------------------------------------
+        # Compact clickable record
+        # -----------------------------------------------------
+        with st.expander(
+            f"Customer #{record_id}   |   "
+            f"{temperature}   |   "
+            f"{fatigue} Fatigue   |   "
+            f"{probability * 100:.1f}% Conversion",
+            expanded=False,
+        ):
+
+            st.caption(
+                "Customer Record ID is generated by this project for "
+                "demonstration purposes - the UCI dataset does not provide "
+                "a real customer identifier."
+            )
+
+            # =================================================
+            # TWO CARDS
+            # =================================================
+            info_col, decision_col = st.columns(
+                [1, 1.3],
+                gap="medium",
+            )
+
+            # -------------------------------------------------
+            # CUSTOMER INFORMATION CARD
+            # -------------------------------------------------
+            with info_col:
+                with st.container(border=True):
+
+                    st.markdown("#### Customer Information")
+
+                    st.write(f"**Age:** {row['age']}")
+                    st.write(f"**Job:** {row['job']}")
+                    st.write(
+                        f"**Marital status:** "
+                        f"{row.get('marital', 'n/a')}"
+                    )
+                    st.write(f"**Balance:** {row['balance']}")
+                    st.write(f"**Contact type:** {row['contact']}")
+                    st.write(
+                        f"**Contacts (current campaign): "
+                        f"{row['campaign']}"
+                    )
+                    st.write(
+                        f"**Contacts (previous campaigns): "
+                        f"{row['previous']}"
+                    )
+                    st.write(
+                        f"**Previous campaign outcome: "
+                        f"{row['poutcome']}"
+                    )
+
+            # -------------------------------------------------
+            # MODEL PREDICTION CARD
+            # -------------------------------------------------
+            with decision_col:
+                with st.container(border=True):
+
+                    st.markdown("#### Model Prediction")
+
+                    st.metric(
+                        "Conversion probability",
+                        f"{probability * 100:.1f}%",
+                    )
+
+                    st.markdown(
+                        f"**Lead Temperature:** "
+                        f"{lead_badge_html(temperature)}",
+                        unsafe_allow_html=True,
+                    )
+
+                    st.markdown("#### Interaction Pattern")
+
+                    st.info(
+                        row["interaction_pattern"]
+                    )
+
+                    st.markdown("#### Contact Fatigue")
+
+                    st.markdown(
+                        fatigue_badge_html(fatigue),
+                        unsafe_allow_html=True,
+                    )
+
+                    st.markdown("#### Recommendation")
+
+                    st.markdown(
+                        f"""
+                        <div class="recommendation-box">
+                            {row["recommendation"]}
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+    render_header()
+
+    st.subheader("Customer Lookup")
+    st.caption(
+        "Search and filter test-set customers using their model-predicted "
+        "decision profiles. All filters are applied together."
+    )
+
+    # =========================================================
+    # SEARCH & FILTERS
+    # =========================================================
+    st.markdown("#### Search & Filters")
+
+    search_col, temp_col, fatigue_col = st.columns([1.6, 1, 1])
+
+    with search_col:
+        record_id_search = st.text_input(
+            "Customer Record ID",
+            placeholder="Search by Customer Record ID...",
+        )
+
+    with temp_col:
+        temp_filter = st.selectbox(
+            "Lead Temperature",
+            ["All", "HOT", "WARM", "COLD"],
+        )
+
+    with fatigue_col:
+        fatigue_filter = st.selectbox(
+            "Contact Fatigue",
+            ["All", "LOW", "MEDIUM", "HIGH"],
+        )
+
+    # =========================================================
+    # APPLY FILTERS
+    # =========================================================
+    filtered = df.copy()
+
+    if temp_filter != "All":
+        filtered = filtered[
+            filtered["lead_temperature"]
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            == temp_filter.upper()
+        ]
+
+    if fatigue_filter != "All":
+        filtered = filtered[
+            filtered["contact_fatigue"]
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            == fatigue_filter.upper()
+        ]
+
+    if record_id_search.strip():
+        search_value = record_id_search.strip().lower()
+
+        filtered = filtered[
+            filtered["customer_record_id"]
+            .astype(str)
+            .str.strip()
+            .str.lower()
+            .str.contains(search_value, na=False)
+        ]
+
+    # =========================================================
+    # NO RESULTS
+    # =========================================================
+    st.markdown("---")
+
+    if filtered.empty:
+        if record_id_search.strip():
+            st.warning(
+                f"Customer Record ID '{record_id_search.strip()}' "
+                "was not found with the selected filters."
+            )
+        else:
+            st.warning(
+                "No customers match the selected filters. "
+                "Try changing the lead temperature or contact fatigue."
+            )
+        return
+
+    # =========================================================
+    # RESULT SUMMARY
+    # =========================================================
+    active_filters = []
+
+    if temp_filter != "All":
+        active_filters.append(f"Temperature: **{temp_filter}**")
+
+    if fatigue_filter != "All":
+        active_filters.append(f"Fatigue: **{fatigue_filter}**")
+
+    if record_id_search.strip():
+        active_filters.append(
+            f"Customer ID: **{record_id_search.strip()}**"
+        )
+
+    st.markdown(
+        f"### Customer Results "
+        f"<span style='font-size: 16px; color: {TEXT_MUTED};'>"
+        f"({len(filtered):,})</span>",
+        unsafe_allow_html=True,
+    )
+
+    if active_filters:
+        st.caption(" • ".join(active_filters))
+    else:
+        st.caption("Showing all customers.")
+
+    # =========================================================
+    # COMPACT EXPANDABLE CUSTOMER RECORDS
+    # =========================================================
+    for _, row in filtered.iterrows():
+
+        record_id = row["customer_record_id"]
+        probability = row["conversion_probability"]
+        temperature = row["lead_temperature"]
+        fatigue = row["contact_fatigue"]
+
+        # Compact clickable customer record
+        with st.expander(
+            f"Customer #{record_id}  •  "
+            f"{temperature}  •  "
+            f"{fatigue} Fatigue  •  "
+            f"{probability * 100:.1f}% Conversion",
+            expanded=False,
+        ):
+
+            st.caption(
+                "Customer Record ID is generated by this project for "
+                "demonstration purposes - the UCI dataset does not provide "
+                "a real customer identifier."
+            )
+
+            info_col, decision_col = st.columns([1, 1.3])
+
+            # =====================================================
+            # CUSTOMER INFORMATION
+            # =====================================================
+            with info_col:
+                with st.container(border=True):
+                    st.markdown("#### Customer Information")
+
+                    st.write(f"**Age:** {row['age']}")
+                    st.write(f"**Job:** {row['job']}")
+                    st.write(
+                        f"**Marital status:** "
+                        f"{row.get('marital', 'n/a')}"
+                    )
+                    st.write(f"**Balance:** {row['balance']}")
+                    st.write(f"**Contact type:** {row['contact']}")
+                    st.write(
+                        f"**Contacts (current campaign):** "
+                        f"{row['campaign']}"
+                    )
+                    st.write(
+                        f"**Contacts (previous campaigns):** "
+                        f"{row['previous']}"
+                    )
+                    st.write(
+                        f"**Previous campaign outcome:** "
+                        f"{row['poutcome']}"
+                    )
+
+            # =====================================================
+            # MODEL PREDICTION
+            # =====================================================
+            with decision_col:
+                with st.container(border=True):
+                    st.markdown("#### Model Prediction")
+
+                    st.metric(
+                        "Conversion probability",
+                        f"{probability * 100:.1f}%",
+                    )
+
+                    st.markdown(
+                        f"**Lead Temperature:** "
+                        f"{lead_badge_html(temperature)}",
+                        unsafe_allow_html=True,
+                    )
+
+                    st.markdown("#### Interaction Pattern")
+
+                    st.info(row["interaction_pattern"])
+
+                    st.markdown("#### Contact Fatigue")
+
+                    st.markdown(
+                        fatigue_badge_html(fatigue),
+                        unsafe_allow_html=True,
+                    )
+
+                    st.markdown("#### Recommendation")
+
+                    st.markdown(
+                        f'<div class="recommendation-box">'
+                        f'{row["recommendation"]}'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
+
 
 
 def page_new_customer_analysis():
     render_header()
+
     st.subheader("New Customer Analysis")
     st.caption(
         "Demonstrates how the trained system could score a customer who is "
@@ -1267,68 +1627,196 @@ def page_new_customer_analysis():
         "training - no model is retrained here."
     )
 
+    # =========================================================
+    # LOAD SCORING ARTIFACTS
+    # =========================================================
     try:
         preprocessor, cnn_model, cat_options = load_scoring_artifacts()
+
     except Exception as e:
         st.error(
             "Could not load the saved preprocessor/model needed for scoring. "
-            f"Details: {e}\n\nRun `python train_and_evaluate.py` from the "
-            "project root first so `models/preprocessor.joblib` and "
+            f"Details: {e}\n\n"
+            "Run `python train_and_evaluate.py` from the project root first "
+            "so `models/preprocessor.joblib` and "
             "`models/cnn_model.keras` exist."
         )
         return
 
+    # =========================================================
+    # NEW CUSTOMER FORM
+    # =========================================================
     with st.form("new_customer_form"):
+
         st.markdown("#### Customer Details")
+
         c1, c2, c3 = st.columns(3)
+
+        # -----------------------------------------------------
+        # Column 1
+        # -----------------------------------------------------
         with c1:
-            age = st.number_input("Age", min_value=18, max_value=100, value=35, step=1)
-            job = st.selectbox("Job", cat_options["job"])
-            marital = st.selectbox("Marital status", cat_options["marital"])
-            education = st.selectbox("Education", cat_options["education"])
-            default = st.selectbox("Has credit in default?", cat_options["default"])
+
+            age = st.number_input(
+                "Age",
+                min_value=18,
+                max_value=100,
+                value=35,
+                step=1,
+            )
+
+            job = st.selectbox(
+                "Job",
+                cat_options["job"],
+            )
+
+            marital = st.selectbox(
+                "Marital status",
+                cat_options["marital"],
+            )
+
+            education = st.selectbox(
+                "Education",
+                cat_options["education"],
+            )
+
+            default = st.selectbox(
+                "Has credit in default?",
+                cat_options["default"],
+            )
+
+        # -----------------------------------------------------
+        # Column 2
+        # -----------------------------------------------------
         with c2:
-            balance = st.number_input("Account balance", min_value=-10000, max_value=150000, value=1000, step=100)
-            housing = st.selectbox("Has housing loan?", cat_options["housing"])
-            loan = st.selectbox("Has personal loan?", cat_options["loan"])
-            contact = st.selectbox("Contact type", cat_options["contact"])
-            day = st.number_input("Last contact day of month", min_value=1, max_value=31, value=15, step=1)
+
+            balance = st.number_input(
+                "Account balance",
+                min_value=-10000,
+                max_value=150000,
+                value=1000,
+                step=100,
+            )
+
+            housing = st.selectbox(
+                "Has housing loan?",
+                cat_options["housing"],
+            )
+
+            loan = st.selectbox(
+                "Has personal loan?",
+                cat_options["loan"],
+            )
+
+            contact = st.selectbox(
+                "Contact type",
+                cat_options["contact"],
+            )
+
+            day = st.number_input(
+                "Last contact day of month",
+                min_value=1,
+                max_value=31,
+                value=15,
+                step=1,
+            )
+
+        # -----------------------------------------------------
+        # Column 3
+        # -----------------------------------------------------
         with c3:
-            month = st.selectbox("Last contact month", cat_options["month"])
+
+            month = st.selectbox(
+                "Last contact month",
+                cat_options["month"],
+            )
+
             duration = st.number_input(
-                "Last call duration (seconds)", min_value=0, max_value=5000, value=180, step=10
+                "Last call duration (seconds)",
+                min_value=0,
+                max_value=5000,
+                value=180,
+                step=10,
             )
+
             campaign = st.number_input(
-                "Contacts in current campaign", min_value=1, max_value=63, value=2, step=1
+                "Contacts in current campaign",
+                min_value=1,
+                max_value=63,
+                value=2,
+                step=1,
             )
+
             pdays = st.number_input(
-                "Days since last contact (previous campaign, -1 = never)",
-                min_value=-1, max_value=900, value=-1, step=1,
+                "Days since last contact "
+                "(previous campaign, -1 = never)",
+                min_value=-1,
+                max_value=900,
+                value=-1,
+                step=1,
             )
+
             previous = st.number_input(
-                "Contacts before this campaign", min_value=0, max_value=275, value=0, step=1
+                "Contacts before this campaign",
+                min_value=0,
+                max_value=275,
+                value=0,
+                step=1,
             )
-            poutcome = st.selectbox("Previous campaign outcome", cat_options["poutcome"])
+
+            poutcome = st.selectbox(
+                "Previous campaign outcome",
+                cat_options["poutcome"],
+            )
 
         st.caption(
             "Duration is assumed to be known because this prototype supports "
             "post-interaction follow-up decisions (see README.md, section 16)."
         )
 
-        submitted = st.form_submit_button("Analyze Customer")
+        submitted = st.form_submit_button(
+            "Analyze Customer"
+        )
 
+    # =========================================================
+    # WAIT FOR SUBMISSION
+    # =========================================================
     if not submitted:
         return
 
+    # =========================================================
+    # BUILD CUSTOMER INPUT
+    # =========================================================
     customer_dict = {
-        "age": age, "job": job, "marital": marital, "education": education,
-        "default": default, "balance": balance, "housing": housing, "loan": loan,
-        "contact": contact, "day": day, "month": month, "duration": duration,
-        "campaign": campaign, "pdays": pdays, "previous": previous, "poutcome": poutcome,
+        "age": age,
+        "job": job,
+        "marital": marital,
+        "education": education,
+        "default": default,
+        "balance": balance,
+        "housing": housing,
+        "loan": loan,
+        "contact": contact,
+        "day": day,
+        "month": month,
+        "duration": duration,
+        "campaign": campaign,
+        "pdays": pdays,
+        "previous": previous,
+        "poutcome": poutcome,
     }
 
+    # =========================================================
+    # SCORE CUSTOMER
+    # =========================================================
     try:
-        result = predict_single_customer(customer_dict, preprocessor, cnn_model, reshape_for_cnn)
+        result = predict_single_customer(
+            customer_dict,
+            preprocessor,
+            cnn_model,
+            reshape_for_cnn,
+        )
+
     except Exception as e:
         st.error(
             "Something went wrong while scoring this customer. This can "
@@ -1337,52 +1825,110 @@ def page_new_customer_analysis():
         )
         return
 
+    # =========================================================
+    # RESULTS
+    # =========================================================
     st.markdown("---")
     st.markdown("### Customer Analysis")
 
     res_col1, res_col2 = st.columns([1, 1.3])
 
+    # ---------------------------------------------------------
+    # Left Card
+    # ---------------------------------------------------------
     with res_col1:
-        st.markdown('<div class="info-card">', unsafe_allow_html=True)
+
+        st.markdown(
+            '<div class="info-card">',
+            unsafe_allow_html=True,
+        )
+
         st.markdown("#### Conversion Probability")
-        st.metric("", f"{result['conversion_probability']*100:.1f}%")
+
+        st.metric(
+            "",
+            f"{result['conversion_probability'] * 100:.1f}%"
+        )
+
         st.markdown("#### Lead Temperature")
-        st.markdown(lead_badge_html(result["lead_temperature"]), unsafe_allow_html=True)
+
+        st.markdown(
+            lead_badge_html(
+                result["lead_temperature"]
+            ),
+            unsafe_allow_html=True,
+        )
+
         st.markdown("</div>", unsafe_allow_html=True)
 
+    # ---------------------------------------------------------
+    # Right Card
+    # ---------------------------------------------------------
     with res_col2:
-        st.markdown('<div class="info-card">', unsafe_allow_html=True)
+
+        st.markdown(
+            '<div class="info-card">',
+            unsafe_allow_html=True,
+        )
+
         st.markdown("#### Interaction Pattern")
-        st.info(result["interaction_pattern"])
+
+        st.info(
+            result["interaction_pattern"]
+        )
+
         st.markdown("#### Contact Fatigue")
-        st.markdown(fatigue_badge_html(result["contact_fatigue"]), unsafe_allow_html=True)
+
+        st.markdown(
+            fatigue_badge_html(
+                result["contact_fatigue"]
+            ),
+            unsafe_allow_html=True,
+        )
+
         st.markdown("#### Recommendation")
-        st.markdown(f'<div class="recommendation-box">{result["recommendation"]}</div>', unsafe_allow_html=True)
+
+        st.markdown(
+            f'<div class="recommendation-box">'
+            f'{result["recommendation"]}'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
         st.markdown("</div>", unsafe_allow_html=True)
 
+    # =========================================================
+    # EXPLANATION
+    # =========================================================
     with st.expander("Why this result?"):
+
         st.markdown(
             f"""
-            - **Conversion probability ({result['conversion_probability']*100:.1f}%)** comes
-              directly from the trained **1D CNN** model, using the same
-              saved preprocessor and the same saved network used for the
-              rest of this dashboard.
+            - **Conversion probability ({result['conversion_probability']*100:.1f}%)**
+              comes directly from the trained **1D CNN** model, using the same
+              saved preprocessor and the same saved network used for the rest
+              of this dashboard.
+
             - **Lead Temperature ({result['lead_temperature']})** is a
               project-created decision-layer label, derived from that
               probability using fixed thresholds (HOT ≥ 70%, WARM 40-70%,
               COLD < 40%).
+
             - **Interaction Pattern ({result['interaction_pattern']})** is
               derived from rule-based campaign-history logic
-              (`previous`, `poutcome`, `campaign`) — not from the CNN.
+              (`previous`, `poutcome`, `campaign`) - not from the CNN.
+
             - **Contact Fatigue ({result['contact_fatigue']})** is derived
-              from the current-campaign contact count (`campaign`) alone —
+              from the current-campaign contact count (`campaign`) alone -
               also not from the CNN.
+
             - **Recommendation** combines the three decision-layer outputs
               above into one suggested marketing action. The CNN does not
-              generate the recommendation text itself — it only supplies
+              generate the recommendation text itself - it only supplies
               the conversion probability.
             """
         )
+
 
 
 def page_model_performance():
@@ -1447,40 +1993,40 @@ def page_about():
         """
         <div class="info-card">
 
-This is a **prototype** Marketing Decision Support System built for a
-college project on the **UCI Bank Marketing dataset**. It is **not**
-connected to a live bank CRM or any real customer database — all
-predictions shown here were generated once (offline) for the dataset's
-test split by `train_and_evaluate.py`, and this dashboard simply displays
-those results.
+        This is a **prototype** Marketing Decision Support System built for a
+        college project on the **UCI Bank Marketing dataset**. It is **not**
+        connected to a live bank CRM or any real customer database — all
+        predictions shown here were generated once (offline) for the dataset's
+        test split by `train_and_evaluate.py`, and this dashboard simply displays
+        those results.
 
-**What the system estimates for each customer:**
+        **What the system estimates for each customer:**
 
-1. **Conversion probability** — model output: how likely the customer is
-   to subscribe to a term deposit, predicted by a 1D CNN trained on the
-   customer's demographic and campaign-history data.
-2. **Lead Temperature** — decision layer: HOT / WARM / COLD, derived from
-   the probability using fixed thresholds (HOT ≥ 70%, WARM 40–70%,
-   COLD < 40%).
-3. **Interaction Pattern** — decision layer: a transparent, rule-based,
-   **project-created** behavioural category (Interested / Repeatedly
-   Contacted / No Previous Interaction / Previously Unsuccessful /
-   Unclear) — not an official UCI label.
-4. **Contact Fatigue** — decision layer: a **project-created** derived
-   indicator (LOW / MEDIUM / HIGH) based on how many times the customer
-   has already been contacted in the current campaign.
-5. **Recommendation** — combines all of the above into one plain-English
-   suggested next action for the marketing team.
+        1. **Conversion probability** — model output: how likely the customer is
+        to subscribe to a term deposit, predicted by a 1D CNN trained on the
+        customer's demographic and campaign-history data.
+        2. **Lead Temperature** — decision layer: HOT / WARM / COLD, derived from
+        the probability using fixed thresholds (HOT ≥ 70%, WARM 40–70%,
+        COLD < 40%).
+        3. **Interaction Pattern** — decision layer: a transparent, rule-based,
+        **project-created** behavioural category (Interested / Repeatedly
+        Contacted / No Previous Interaction / Previously Unsuccessful /
+        Unclear) — not an official UCI label.
+        4. **Contact Fatigue** — decision layer: a **project-created** derived
+        indicator (LOW / MEDIUM / HIGH) based on how many times the customer
+        has already been contacted in the current campaign.
+        5. **Recommendation** — combines all of the above into one plain-English
+        suggested next action for the marketing team.
 
-**Post-interaction assumption:** the dataset's `duration` field (length of
-the last phone call) is only known after a contact attempt has happened.
-This system assumes it is used **after** that first contact, to support
-*follow-up* decisions — not to decide who to call in the first place. See
-`README.md` for the full discussion.
+        **Post-interaction assumption:** the dataset's `duration` field (length of
+        the last phone call) is only known after a contact attempt has happened.
+        This system assumes it is used **after** that first contact, to support
+        *follow-up* decisions — not to decide who to call in the first place. See
+        `README.md` for the full discussion.
 
-**Customer Record ID** shown throughout this dashboard is generated from
-the dataset's row position for this project only — the UCI dataset does
-not include a real customer identifier.
+        **Customer Record ID** shown throughout this dashboard is generated from
+        the dataset's row position for this project only — the UCI dataset does
+        not include a real customer identifier.
 
         </div>
         """,

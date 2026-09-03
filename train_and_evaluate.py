@@ -1,6 +1,6 @@
 """
 train_and_evaluate.py
-----------------------
+ 
 End-to-end script that:
     1. Loads and preprocesses the Bank Marketing dataset
     2. Trains baseline models (Logistic Regression, Decision Tree, Random Forest)
@@ -100,9 +100,9 @@ def main():
     results = []
     roc_data = {}
 
-    # -----------------------------------------------------------------
+    #
     # STEP 2: Baseline models
-    # -----------------------------------------------------------------
+    #
     print("\n" + "=" * 70)
     print("STEP 2: Train baseline models")
     print("=" * 70)
@@ -128,9 +128,9 @@ def main():
     results.append(mdl.evaluate_model(y_test, y_pred_rf, y_prob_rf, "Random Forest"))
     mdl.save_sklearn_model(rf_model, f"{MODELS_DIR}/random_forest.joblib")
 
-    # -----------------------------------------------------------------
+    #
     # STEP 3: 1D CNN
-    # -----------------------------------------------------------------
+    #
     print("\n" + "=" * 70)
     print("STEP 3: Train 1D CNN")
     print("=" * 70)
@@ -145,9 +145,9 @@ def main():
 
     plot_cnn_history(history, f"{OUTPUTS_DIR}/cnn_training_history.png")
 
-    # -----------------------------------------------------------------
+    #
     # STEP 4: Model comparison
-    # -----------------------------------------------------------------
+    #
     print("\n" + "=" * 70)
     print("STEP 4: Model comparison")
     print("=" * 70)
@@ -181,9 +181,9 @@ def main():
     plt.savefig(f"{OUTPUTS_DIR}/roc_curves_all_models.png", dpi=120)
     plt.close(fig)
 
-    # -----------------------------------------------------------------
+    #
     # STEP 5: Final Marketing Decision Support System outputs
-    # -----------------------------------------------------------------
+    #
     print("\n" + "=" * 70)
     print("STEP 5: Build final prediction dataframe (using CNN probabilities)")
     print("=" * 70)
