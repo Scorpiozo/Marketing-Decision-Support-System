@@ -55,7 +55,7 @@ FEATURE_LABELS: dict[str, str] = {
     "day": "Day of month",
     "month": "Contact month",
     "campaign": "Contacts this campaign",
-    "pdays": "Days since previous-campaign contact",
+    "pdays": "Days since previous contact",
     "previous": "Contacts before this campaign",
     "poutcome": "Previous campaign outcome",
     "duration": "Last call duration",

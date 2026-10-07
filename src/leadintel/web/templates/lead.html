@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% from "_macros.html" import action_badge, pct, waterfall, range_bar %}
+{% block title %}{{ a.lead_id }} · Lead Decision Intelligence{% endblock %}
+{% block content %}
+{% set L = a.lead %}
+<section class="page-head">
+  <div class="eyebrow"><a href="/leads">← Leads</a> · Lead intelligence</div>
+  <h1 class="num">{{ a.lead_id }}</h1>
+  <p>{{ view.summary }}</p>
+</section>
+
+<div class="grid g-lead">
+  <div class="stack">
+    {% include "_assessment.html" %}
+
+    <div class="card">
+      <h2>Interaction pattern</h2>
+      <div class="kpi-row">
+        <div><div class="eyebrow">Previous campaigns</div><b>{{ a.pattern.history }}</b>
+          <div class="small muted">{{ L.previous }} earlier contact{{ "s" if L.previous != 1 }}{% if L.pdays >= 0 %}, last {{ L.pdays }} days ago{% endif %} · outcome: {{ L.poutcome }}</div></div>
+        <div><div class="eyebrow">This campaign</div><b>{{ a.pattern.intensity }}</b>
+          <div class="small muted">via {{ L.contact }}, latest in {{ L.month }}</div></div>
+        <div><div class="eyebrow">Similar leads that subscribed</div>
+          <b class="num">{{ pct(a.pattern.observed_rate) if a.pattern.observed_rate is not none else "–" }}</b>
+          <div class="small muted">{{ "{:,}".format(a.pattern.observed_n) }} training leads with this pattern</div></div>
+      </div>
+      <p class="small muted" style="margin:10px 0 0">The pattern is a descriptive label built from <code>previous</code>, <code>poutcome</code> and
+        <code>campaign</code>. The model itself uses the raw fields. <a href="/patterns">Explore all patterns →</a></p>
+    </div>
+
+    <details class="card">
+      <summary>Back-test: what actually happened to this lead?</summary>
+      <p>In the historical data this lead <b>{{ "subscribed" if a.actual_outcome == 1 else "did not subscribe" }}</b>.
+        The model never saw this outcome. It is shown only so you can judge the recommendation after the fact.
+        Individual outcomes are noisy: even a 30% lead usually says no.</p>
+    </details>
+  </div>
+
+  <div class="stack">
+    <div class="card">
+      <div class="card-head"><h2>What-if simulator</h2><a class="small" href="/leads/{{ a.lead_id }}">Reset</a></div>
+      <p class="small text-2">Change a field and the estimate, explanation and recommendation update immediately (scored live by the same model).
+        Fields marked <span class="tag context">context</span> partly reflect <i>when</i> the data was collected, so treat them as context, not levers.</p>
+      <form hx-post="/leads/{{ a.lead_id }}/whatif" hx-trigger="change delay:150ms" hx-target="#whatif-result" hx-indicator="#whatif-result">
+        <fieldset><legend>Interaction history</legend>
+          <div class="form-grid">
+            <label class="field">Contacts this campaign<input type="number" name="campaign" min="1" max="100" value="{{ L.campaign }}"></label>
+            <label class="field">Contacts before this campaign<input type="number" name="previous" min="0" max="300" value="{{ L.previous }}"></label>
+            <label class="field">Days since previous contact (−1 = never)<input type="number" name="pdays" min="-1" max="999" value="{{ L.pdays }}"></label>
+            <label class="field">Previous outcome
+              <select name="poutcome">{% for v in levels.poutcome %}<option {% if v == L.poutcome %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></label>
+          </div>
+        </fieldset>
+        <fieldset><legend>Customer profile</legend>
+          <div class="form-grid">
+            <label class="field">Age<input type="number" name="age" min="18" max="100" value="{{ L.age }}"></label>
+            <label class="field">Balance (€)<input type="number" name="balance" min="-20000" max="200000" value="{{ L.balance }}"></label>
+            {% for f in ["job", "marital", "education", "default", "housing", "loan"] %}
+            <label class="field">{{ FEATURE_LABELS[f] }}
+              <select name="{{ f }}">{% for v in levels[f] %}<option {% if v == L[f] %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></label>
+            {% endfor %}
+          </div>
+        </fieldset>
+        <fieldset><legend>Campaign context <span class="tag context">context</span></legend>
+          <div class="form-grid">
+            <label class="field">Contact channel
+              <select name="contact">{% for v in levels.contact %}<option {% if v == L.contact %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></label>
+            <label class="field">Month
+              <select name="month">{% for v in levels.month %}<option {% if v == L.month %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></label>
+            <label class="field">Day of month<input type="number" name="day" min="1" max="31" value="{{ L.day }}"></label>
+          </div>
+        </fieldset>
+        <noscript><button class="btn" type="submit">Re-score</button></noscript>
+      </form>
+    </div>
+    <div id="whatif-result" class="busy" aria-live="polite">
+      <div class="note">Try it: set <b>Contacts this campaign</b> to 8, or <b>Previous outcome</b> to <i>success</i>, and watch the recommendation change.</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

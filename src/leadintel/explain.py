@@ -117,50 +117,55 @@ class Explainer:
         return [self.explain_row(X.iloc[i], phis[i]) for i in range(len(X))]
 
 
+# Explicit, human-meaningful bins for count features (quantile edges would mislabel them).
+COUNT_BINS: dict[str, tuple[list[float], list[str]]] = {
+    "campaign": ([0, 1, 2, 3, 5, 1000], ["1", "2", "3", "4–5", "6+"]),
+    "previous": ([-1, 0, 1, 3, 1000], ["0", "1", "2–3", "4+"]),
+}
+
+
+def _levels(key: pd.Series, phi: np.ndarray, order: list[str] | None) -> list[dict[str, object]]:
+    grouped = pd.DataFrame({"k": key.astype(str).to_numpy(), "phi": phi}).groupby("k")["phi"]
+    mean, size = grouped.mean(), grouped.size()
+    keys = order if order is not None else sorted(mean.index, key=lambda k: -mean[k])
+    return [
+        {"value": k, "mean_log_odds": round(float(mean[k]), 3), "n": int(size[k])}
+        for k in keys
+        if k in mean.index
+    ]
+
+
+def _value_key(f: str, col: pd.Series) -> tuple[pd.Series, list[str] | None]:
+    """Group a feature's values into readable buckets (and their display order)."""
+    if f in COUNT_BINS:
+        edges, names = COUNT_BINS[f]
+        return pd.cut(col, bins=edges, labels=names).astype(str), names
+    if f == "pdays":
+        return col.map(lambda v: "never contacted" if v == -1 else "contacted before"), None
+    if col.dtype.kind in "iuf" and col.nunique() > 12:
+        # Quantile bins labelled by the actual min-max inside each bin.
+        codes = pd.Series(pd.qcut(col, q=6, duplicates="drop", labels=False), index=col.index)
+        spans = col.groupby(codes).agg(["min", "max"])
+        names = {k: f"{int(row['min']):,}–{int(row['max']):,}" for k, row in spans.iterrows()}
+        return codes.map(names), list(names.values())
+    return col.map(lambda v: display_value(f, v)), None
+
+
 def global_importance(
     X: pd.DataFrame, phis: np.ndarray, features: list[str]
 ) -> list[dict[str, object]]:
     """Mean |SHAP| per feature plus how its effect varies across its values."""
     out: list[dict[str, object]] = []
     for j, f in enumerate(features):
-        col, phi = X[f], phis[:, j]
-        if col.dtype.kind in "iuf" and f != "pdays" and col.nunique() > 12:
-            bins = pd.qcut(col, q=6, duplicates="drop")
-            grouped = pd.DataFrame({"bin": bins, "phi": phi}).groupby("bin", observed=True)["phi"]
-            levels = [
-                {
-                    "value": f"{int(iv.left)}–{int(iv.right)}",
-                    "mean_log_odds": round(float(m), 3),
-                    "n": int(n),
-                }
-                for iv, m, n in zip(
-                    grouped.mean().index, grouped.mean(), grouped.size(), strict=True
-                )
-            ]
-        else:
-            key = col.map(
-                lambda v, f=f: (
-                    display_value(f, v)
-                    if f != "pdays"
-                    else ("never contacted" if v == -1 else "contacted before")
-                )
-            )
-            grouped = pd.DataFrame({"k": key, "phi": phi}).groupby("k")["phi"]
-            levels = [
-                {"value": str(k), "mean_log_odds": round(float(m), 3), "n": int(n)}
-                for k, m, n in zip(
-                    grouped.mean().index, grouped.mean(), grouped.size(), strict=True
-                )
-            ]
-            levels.sort(key=lambda d: -float(d["mean_log_odds"]))  # type: ignore[arg-type]
+        key, order = _value_key(f, X[f])
         out.append(
             {
                 "feature": f,
                 "label": FEATURE_LABELS[f],
                 "group": FEATURE_GROUP_OF[f],
-                "mean_abs_log_odds": round(float(np.abs(phi).mean()), 4),
+                "mean_abs_log_odds": round(float(np.abs(phis[:, j]).mean()), 4),
                 "is_context": f in CONTEXT_CAVEAT,
-                "levels": levels,
+                "levels": _levels(key, phis[:, j], order),
             }
         )
     out.sort(key=lambda d: -float(d["mean_abs_log_odds"]))  # type: ignore[arg-type]

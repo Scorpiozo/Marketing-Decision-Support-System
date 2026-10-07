@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pct, hbar_chart, xy_chart %}
+{% block title %}Model & XAI · Lead Decision Intelligence{% endblock %}
+{% block content %}
+{% set tm = card.test_metrics %}
+{% set cmp = exp.get("comparison", {}).get("results", []) %}
+<section class="page-head">
+  <h1>Model &amp; explainability</h1>
+  <p>Deployed model: <b>{{ card.model_display_name }}</b> on {{ card.features | length }} fields (call <code>duration</code> excluded as leakage).
+    Trained on {{ "{:,}".format(card.data.dev_rows) }} leads and evaluated once on {{ "{:,}".format(card.data.test_rows) }} held-out leads.
+    Every number on this page comes from <code>reports/experiments/*.json</code> and <code>artifacts/model_card.json</code>.</p>
+</section>
+
+<div class="card">
+  <h2>Model comparison</h2>
+  <p class="small text-2">5-fold cross-validation on the training split (mean ± sd), then one evaluation on the held-out split with a 95% bootstrap interval.
+    F1 uses a threshold chosen on cross-validation predictions, never on the test set. All models are unweighted, except the two rows marked “balanced”.</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Table (scrolls horizontally on small screens)">
+  <table>
+    <thead><tr><th>Model</th><th class="num">CV ROC-AUC</th><th class="num">Test ROC-AUC [95% CI]</th><th class="num">Test PR-AUC</th>
+      <th class="num">Brier ↓</th><th class="num">Calib. error ↓</th><th class="num">Mean est.</th><th class="num">F1</th><th class="num">Latency</th><th class="num">Size</th></tr></thead>
+    <tbody>
+    {% for r in cmp %}{% set t = r.test %}
+      <tr {% if r.model == card.model and not r.balanced %}class="highlight"{% endif %}>
+        <td>{{ r.display_name }}</td>
+        <td class="num">{{ "%.3f ± %.3f" | format(r.cv.roc_auc[0], r.cv.roc_auc[1]) }}</td>
+        <td class="num">{{ "%.3f" | format(t.roc_auc) }} <span class="muted">[{{ "%.3f–%.3f" | format(r.test_ci95.roc_auc[0], r.test_ci95.roc_auc[1]) }}]</span></td>
+        <td class="num">{{ "%.3f" | format(t.pr_auc) }}</td>
+        <td class="num">{{ "%.4f" | format(t.brier) }}</td>
+        <td class="num">{{ pct(t.ece, 1) }}</td>
+        <td class="num">{{ pct(t.mean_predicted, 1) }}</td>
+        <td class="num">{{ "%.3f" | format(t.at_threshold.f1) }}</td>
+        <td class="num">{{ "%.1f" | format(r.latency_ms_single_row) }} ms</td>
+        <td class="num">{{ "{:,.0f}".format(r.size_kb) }} KB</td>
+      </tr>
+    {% endfor %}
+      <tr><td>1D CNN (legacy architecture) — see below</td><td class="num muted">–</td>
+        <td class="num">{{ "%.3f" | format(exp.cnn.original_order_mean_std.roc_auc[0]) if exp.get("cnn") }}</td>
+        <td class="num">{{ "%.3f" | format(exp.cnn.original_order_mean_std.pr_auc[0]) if exp.get("cnn") }}</td>
+        <td class="num">{{ "%.4f" | format(exp.cnn.original_order_mean_std.brier[0]) if exp.get("cnn") }}</td>
+        <td colspan="5" class="muted small">mean of 3 seeds · ~{{ exp.cnn.mean_fit_seconds if exp.get("cnn") }} s to train</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="grid g2" style="margin-top:12px">
+    <div class="note"><b>Why gradient boosting?</b> It has the best ranking (ROC/PR-AUC) and the best probability quality (Brier), and it is
+      well calibrated without any extra calibration step. It is small and fast, and exact TreeSHAP explanations exist for it. Random Forest is
+      statistically tied but ~30× larger. Logistic regression is the transparent baseline, about 0.04 AUC behind.</div>
+    <div class="note"><b>Why not accuracy?</b> With an {{ pct(tm.base_rate, 1) }} subscription rate, a model that always says “no” is
+      {{ pct(1 - tm.base_rate, 0) }} accurate and useless. We judge ranking (ROC-AUC, PR-AUC), probability honesty (Brier, calibration error)
+      and what the decisions achieve (Decision policy page).</div>
+  </div>
+</div>
+
+<div class="grid g3" style="margin-top:16px">
+  <div class="card"><h3>ROC curve</h3>{{ xy_chart(roc, "ROC curve, held-out leads", "False positive rate", "True positive rate") }}
+    <p class="small muted">AUC {{ "%.3f" | format(tm.roc_auc) }}: the probability that a random subscriber is ranked above a random non-subscriber.</p></div>
+  <div class="card"><h3>Precision–recall</h3>{{ xy_chart(pr, "Precision-recall curve, held-out leads", "Recall", "Precision") }}
+    <p class="small muted">PR-AUC {{ "%.3f" | format(tm.pr_auc) }} vs {{ "%.3f" | format(tm.base_rate) }} for random ranking. More informative than ROC when positives are rare.</p></div>
+  <div class="card"><h3>Calibration</h3>{{ xy_chart(reliability, "Reliability diagram: predicted vs observed rate per decile", "Mean estimate (decile)", "Observed rate", True) }}
+    <p class="small muted">Points on the diagonal mean “30%” really happens about 30% of the time. Calibration error {{ pct(tm.ece, 1) }}.</p></div>
+</div>
+
+<div class="grid g2" style="margin-top:16px">
+  {% set c = tm.at_threshold.confusion %}
+  <div class="card">
+    <h2>Confusion matrix at the follow-up line ({{ pct(tm.at_threshold.threshold) }})</h2>
+    <table style="max-width:420px">
+      <thead><tr><th></th><th class="num">Model: follow up</th><th class="num">Model: don't</th></tr></thead>
+      <tbody>
+        <tr><th>Actually subscribed</th><td class="num"><b>{{ "{:,}".format(c.tp) }}</b> <span class="muted small">true pos.</span></td><td class="num">{{ "{:,}".format(c.fn) }} <span class="muted small">missed</span></td></tr>
+        <tr><th>Did not</th><td class="num">{{ "{:,}".format(c.fp) }} <span class="muted small">wasted calls</span></td><td class="num"><b>{{ "{:,}".format(c.tn) }}</b> <span class="muted small">calls saved</span></td></tr>
+      </tbody>
+    </table>
+    <p class="small text-2" style="margin-top:8px">Precision {{ pct(tm.at_threshold.precision) }} · recall {{ pct(tm.at_threshold.recall) }} · flags {{ pct(tm.at_threshold.flagged_share) }} of leads.
+      A low line is deliberate: with cheap calls and valuable subscriptions, a missed subscriber costs more than a wasted call.</p>
+  </div>
+  <div class="card">
+    <h2>What drives the model overall (global SHAP)</h2>
+    {{ hbar_chart(imp_chart, "Mean absolute SHAP value per field") }}
+    <p class="small text-2" style="margin-top:6px">Mean |SHAP| over held-out leads (log-odds). <span class="tag context">amber</span> = context fields
+      (channel, month, day). Their high rank partly reflects the 2008–2010 collection period: <code>contact = unknown</code> occurs only in the earliest records.</p>
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px" id="ablation">
+  <h2>Feature-group ablation</h2>
+  <p class="small text-2">Does each feature group add value? Two splits: <b>random</b> (same period as training) and <b>out-of-time</b>
+    (train on the earliest 80% of contacts, test on the latest 20%, where the subscription rate is far higher because of drift).</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Table (scrolls horizontally on small screens)">
+  <table>
+    <thead><tr><th>Feature set</th><th>Model</th><th class="num">ROC-AUC (random)</th><th class="num">PR-AUC (random)</th><th class="num">Top-20% recall</th><th class="num">ROC-AUC (out-of-time)</th><th class="num">PR-AUC (out-of-time)</th></tr></thead>
+    <tbody>
+    {% set tmp = exp.get("ablation", {}) %}
+    {% for r in tmp.get("random_split", []) %}{% set t2 = tmp.temporal_split[loop.index0] %}
+      <tr {% if r.feature_set == "full" and r.model == card.model %}class="highlight"{% endif %}>
+        <td>{{ r.feature_set }}{% if r.feature_set == "full+duration" %} <span class="tag context">leakage, not deployable</span>{% endif %}</td>
+        <td>{{ "Logistic Reg." if r.model == "logistic_regression" else "Grad. Boosting" }}</td>
+        <td class="num">{{ "%.3f" | format(r.test.roc_auc) }}</td><td class="num">{{ "%.3f" | format(r.test.pr_auc) }}</td>
+        <td class="num">{{ pct(r.test.top20_recall) }}</td>
+        <td class="num">{{ "%.3f" | format(t2.test.roc_auc) }}</td><td class="num">{{ "%.3f" | format(t2.test.pr_auc) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p class="small" style="margin-top:8px"><b>Takeaways.</b> Interaction history adds signal in both settings. Campaign context helps in-period but
+    <i>not</i> out-of-time. <code>duration</code> inflates AUC by ~0.13. Out-of-time performance drops for every model, so a real deployment
+    would need regular retraining and recalibration.</p>
+</div>
+
+<div class="grid g2" style="margin-top:16px">
+  <div class="card" id="cnn">
+    <h2>Was the 1D CNN justified?</h2>
+    {% if exp.get("cnn") %}{% set k = exp.cnn %}
+    <p class="small text-2">The original project fed a one-hot vector ({{ k.input }}) into convolution filters. Convolutions assume that
+      <i>neighbouring</i> inputs form local patterns, as pixels do. Here the neighbours are just the order of the columns. Test: retrain with the columns randomly shuffled.</p>
+    <table>
+      <thead><tr><th>CNN input order</th><th class="num">ROC-AUC</th><th class="num">PR-AUC</th></tr></thead>
+      <tbody>
+        <tr><td>Original (3 seeds)</td><td class="num">{{ "%.3f ± %.3f" | format(k.original_order_mean_std.roc_auc[0], k.original_order_mean_std.roc_auc[1]) }}</td><td class="num">{{ "%.3f" | format(k.original_order_mean_std.pr_auc[0]) }}</td></tr>
+        <tr><td>Randomly shuffled (3 permutations)</td><td class="num">{{ "%.3f ± %.3f" | format(k.permuted_mean_std.roc_auc[0], k.permuted_mean_std.roc_auc[1]) }}</td><td class="num">{{ "%.3f" | format(k.permuted_mean_std.pr_auc[0]) }}</td></tr>
+      </tbody>
+    </table>
+    <p class="small" style="margin-top:8px"><b>Conclusion:</b> shuffling makes no meaningful difference, so the CNN uses no spatial structure and behaves like a
+      generic neural network. It is kept as a documented experiment, not deployed. This matches the literature: tree ensembles generally beat deep nets on
+      medium-sized tabular data (Grinsztajn et al., 2022).</p>
+    {% endif %}
+  </div>
+  <div class="card">
+    <h2>Why the original probabilities were inflated</h2>
+    {% set unb = cmp | selectattr("model", "equalto", "gradient_boosting") | list %}
+    <table>
+      <thead><tr><th>Gradient boosting</th><th class="num">ROC-AUC</th><th class="num">Brier ↓</th><th class="num">Mean est.</th></tr></thead>
+      <tbody>{% for r in unb %}<tr><td>{{ "balanced class weights" if r.balanced else "unweighted (deployed)" }}</td>
+        <td class="num">{{ "%.3f" | format(r.test.roc_auc) }}</td><td class="num">{{ "%.4f" | format(r.test.brier) }}</td><td class="num">{{ pct(r.test.mean_predicted, 1) }}</td></tr>{% endfor %}</tbody>
+    </table>
+    <p class="small text-2" style="margin-top:8px">Balancing classes leaves the ranking unchanged but makes every probability too high (actual rate {{ pct(tm.base_rate, 1) }}).
+      The imbalance is handled in the decision threshold instead (van den Goorbergh et al., 2022; Elkan, 2001).</p>
+  </div>
+</div>
+
+<div class="grid g2" style="margin-top:16px">
+  <div class="card">
+    <h2>Error analysis (at the follow-up line)</h2>
+    {% set ea = card.error_analysis %}
+    <table>
+      <thead><tr><th></th><th class="num">n</th><th class="num">Mean est.</th><th class="num">New to campaigns</th><th class="num">Channel unknown</th><th class="num">Median contacts</th></tr></thead>
+      <tbody>{% for key, label in [("true_positives", "Correctly flagged"), ("false_positives", "Flagged, didn't subscribe"), ("false_negatives", "Missed subscribers")] %}{% set g = ea[key] %}
+        <tr><td>{{ label }}</td><td class="num">{{ "{:,}".format(g.n) }}</td><td class="num">{{ pct(g.mean_probability) }}</td><td class="num">{{ pct(g.share_new_to_campaigns) }}</td><td class="num">{{ pct(g.share_contact_unknown) }}</td><td class="num">{{ g.median_contacts | int }}</td></tr>
+      {% endfor %}</tbody>
+    </table>
+    <p class="small text-2" style="margin-top:8px">Missed subscribers are mostly <b>new to campaigns</b> with low estimates. With no history, the model has little to go on,
+      which is exactly where real conversational CRM data would help most. Examples:
+      {% for id in ea.false_negatives.examples %}<a href="/leads/{{ id }}">{{ id }}</a>{{ ", " if not loop.last }}{% endfor %}.
+      Confident misses (flagged, didn't subscribe): {% for id in ea.false_positives.examples %}<a href="/leads/{{ id }}">{{ id }}</a>{{ ", " if not loop.last }}{% endfor %}.</p>
+  </div>
+  <div class="card">
+    <h2>How explanations are computed</h2>
+    <ul class="reasons small">
+      <li><b>Local (per lead):</b> exact TreeSHAP (Lundberg et al., 2020). Each field gets a contribution in log-odds; contributions + the average-lead baseline
+        add up to the lead's estimate. Verified on every training run: max additivity error {{ "%.1e" | format(card.shap_additivity_max_error) }}.</li>
+      <li><b>Global:</b> mean |SHAP| across held-out leads, plus the average effect of each value (Interaction patterns page).</li>
+      <li><b>Interactions:</b> SHAP interaction values and an additive-vs-full model comparison.</li>
+      <li><b>Counterfactual:</b> the what-if simulator re-scores an edited lead with the same model and shows which contributions moved.</li>
+      <li><b>A pitfall we caught:</b> SHAP silently returns <i>wrong</i> values for scikit-learn boosting with native categorical splits (error 2.7 log-odds).
+        Categoricals are therefore ordinal-encoded, and a test guards against regressions.</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

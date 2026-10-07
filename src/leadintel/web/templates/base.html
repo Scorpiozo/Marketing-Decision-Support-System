@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Lead Decision Intelligence{% endblock %}</title>
+  <meta name="description" content="Research prototype: interpretable, interaction-pattern-based lead decision support on the UCI Bank Marketing dataset.">
+  <script>
+    // Apply the saved theme before first paint (no flash).
+    try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="/static/app.css?v={{ ASSET_VERSION }}">
+  <script src="/static/htmx.min.js?v={{ ASSET_VERSION }}" defer></script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="top">
+    <div class="top-inner">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">L</span>Lead Decision Intelligence</a>
+      <nav class="main" aria-label="Main">
+        {% for key, href, label in [
+          ("overview", "/", "Overview"),
+          ("leads", "/leads", "Leads"),
+          ("patterns", "/patterns", "Interaction patterns"),
+          ("model", "/model", "Model & XAI"),
+          ("policy", "/policy", "Decision policy"),
+          ("method", "/method", "Method & limits"),
+        ] %}
+        <a href="{{ href }}" {% if active == key %}aria-current="page"{% endif %}>{{ label }}</a>
+        {% endfor %}
+      </nav>
+      <button class="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode">◐ Theme</button>
+    </div>
+  </header>
+  <main id="content">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site">
+    Research prototype for decision support — not an autonomous decision-maker and not connected to any bank.
+    Data: UCI Bank Marketing (Moro, Cortez &amp; Rita, 2014; CC BY 4.0), Portuguese bank, 2008–2010.
+    Business costs on the Decision-policy page are illustrative assumptions.
+  </footer>
+  <script>
+    function toggleTheme() {
+      const root = document.documentElement;
+      const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+      root.dataset.theme = dark ? "light" : "dark";
+      try { localStorage.setItem("theme", root.dataset.theme); } catch (e) {}
+    }
+  </script>
+</body>
+</html>

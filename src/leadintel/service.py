@@ -141,7 +141,7 @@ class ScoringService:
             caveats.append(
                 f"{' and '.join(top_context)} {'is' if len(top_context) == 1 else 'are'} among the "
                 "main drivers. In this dataset, contact channel, month and day partly reflect "
-                "*when* the data was collected (strong drift over 2008–2010), not how the "
+                "when the data was collected (strong drift over 2008–2010), not how the "
                 "customer behaved."
             )
         if pattern.history == "New to campaigns":

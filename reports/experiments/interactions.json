@@ -37,7 +37,7 @@
           "pdays",
           "poutcome"
         ],
-        "label": "Days since previous-campaign contact \u00d7 Previous campaign outcome",
+        "label": "Days since previous contact \u00d7 Previous campaign outcome",
         "mean_abs_interaction": 0.2312
       },
       {
@@ -77,7 +77,7 @@
           "month",
           "pdays"
         ],
-        "label": "Contact month \u00d7 Days since previous-campaign contact",
+        "label": "Contact month \u00d7 Days since previous contact",
         "mean_abs_interaction": 0.0781
       },
       {
@@ -125,7 +125,7 @@
           "housing",
           "pdays"
         ],
-        "label": "Housing loan \u00d7 Days since previous-campaign contact",
+        "label": "Housing loan \u00d7 Days since previous contact",
         "mean_abs_interaction": 0.0323
       }
     ],
@@ -135,7 +135,7 @@
           "pdays",
           "poutcome"
         ],
-        "label": "Days since previous-campaign contact \u00d7 Previous campaign outcome",
+        "label": "Days since previous contact \u00d7 Previous campaign outcome",
         "mean_abs_interaction": 0.2312
       },
       {

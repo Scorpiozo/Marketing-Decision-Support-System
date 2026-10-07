@@ -1,5 +1,5 @@
 {
-  "trained_at": "2026-10-07T16:46:58+00:00",
+  "trained_at": "2026-10-07T17:01:48+00:00",
   "model": "gradient_boosting",
   "model_display_name": "Gradient Boosting (HistGB)",
   "features": [
@@ -1125,7 +1125,7 @@
     },
     {
       "feature": "pdays",
-      "label": "Days since previous-campaign contact",
+      "label": "Days since previous contact",
       "group": "Interaction history",
       "mean_abs_log_odds": 0.2659,
       "is_context": false,
@@ -1267,32 +1267,32 @@
       "is_context": false,
       "levels": [
         {
-          "value": "-3058\u20131",
+          "value": "-3,058\u20131",
           "mean_log_odds": -0.236,
           "n": 1513
         },
         {
-          "value": "1\u2013173",
+          "value": "2\u2013173",
           "mean_log_odds": -0.128,
           "n": 1504
         },
         {
-          "value": "173\u2013437",
+          "value": "174\u2013437",
           "mean_log_odds": -0.001,
           "n": 1505
         },
         {
-          "value": "437\u2013930",
+          "value": "438\u2013930",
           "mean_log_odds": 0.04,
           "n": 1507
         },
         {
-          "value": "930\u20132288",
+          "value": "931\u20132,287",
           "mean_log_odds": 0.105,
           "n": 1506
         },
         {
-          "value": "2288\u201398417",
+          "value": "2,288\u201398,417",
           "mean_log_odds": 0.232,
           "n": 1508
         }
@@ -1306,32 +1306,32 @@
       "is_context": true,
       "levels": [
         {
-          "value": "0\u20136",
+          "value": "1\u20136",
           "mean_log_odds": 0.081,
           "n": 1597
         },
         {
-          "value": "6\u201311",
+          "value": "7\u201311",
           "mean_log_odds": 0.056,
           "n": 1453
         },
         {
-          "value": "11\u201316",
+          "value": "12\u201316",
           "mean_log_odds": 0.194,
           "n": 1609
         },
         {
-          "value": "16\u201320",
+          "value": "17\u201320",
           "mean_log_odds": -0.075,
           "n": 1796
         },
         {
-          "value": "20\u201326",
+          "value": "21\u201326",
           "mean_log_odds": 0.059,
           "n": 1243
         },
         {
-          "value": "26\u201331",
+          "value": "27\u201331",
           "mean_log_odds": -0.032,
           "n": 1345
         }
@@ -1369,24 +1369,29 @@
       "is_context": false,
       "levels": [
         {
-          "value": "0\u20132",
-          "mean_log_odds": 0.065,
-          "n": 6000
+          "value": "1",
+          "mean_log_odds": 0.102,
+          "n": 3518
         },
         {
-          "value": "2\u20133",
+          "value": "2",
+          "mean_log_odds": 0.013,
+          "n": 2482
+        },
+        {
+          "value": "3",
           "mean_log_odds": 0.015,
           "n": 1109
         },
         {
-          "value": "3\u20134",
-          "mean_log_odds": -0.041,
-          "n": 717
+          "value": "4\u20135",
+          "mean_log_odds": -0.076,
+          "n": 1062
         },
         {
-          "value": "4\u201355",
-          "mean_log_odds": -0.32,
-          "n": 1217
+          "value": "6+",
+          "mean_log_odds": -0.388,
+          "n": 872
         }
       ]
     },
@@ -1398,32 +1403,32 @@
       "is_context": false,
       "levels": [
         {
-          "value": "17\u201331",
+          "value": "18\u201331",
           "mean_log_odds": 0.121,
           "n": 1742
         },
         {
-          "value": "31\u201335",
+          "value": "32\u201335",
           "mean_log_odds": -0.022,
           "n": 1575
         },
         {
-          "value": "35\u201339",
+          "value": "36\u201339",
           "mean_log_odds": -0.025,
           "n": 1294
         },
         {
-          "value": "39\u201345",
+          "value": "40\u201345",
           "mean_log_odds": -0.047,
           "n": 1464
         },
         {
-          "value": "45\u201353",
+          "value": "46\u201353",
           "mean_log_odds": -0.092,
           "n": 1629
         },
         {
-          "value": "53\u201393",
+          "value": "54\u201393",
           "mean_log_odds": 0.051,
           "n": 1339
         }
@@ -1485,14 +1490,24 @@
       "is_context": false,
       "levels": [
         {
-          "value": "0\u20131",
-          "mean_log_odds": -0.015,
-          "n": 7910
+          "value": "0",
+          "mean_log_odds": -0.013,
+          "n": 7370
         },
         {
-          "value": "1\u201337",
-          "mean_log_odds": 0.079,
-          "n": 1133
+          "value": "1",
+          "mean_log_odds": -0.042,
+          "n": 540
+        },
+        {
+          "value": "2\u20133",
+          "mean_log_odds": 0.053,
+          "n": 686
+        },
+        {
+          "value": "4+",
+          "mean_log_odds": 0.12,
+          "n": 447
         }
       ]
     },

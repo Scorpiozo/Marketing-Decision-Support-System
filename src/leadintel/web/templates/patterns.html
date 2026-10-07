@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pct, hbar_chart %}
+{% block title %}Interaction patterns · Lead Decision Intelligence{% endblock %}
+{% block content %}
+{% set inter = exp.get("interactions", {}) %}
+<section class="page-head">
+  <h1>Interaction patterns</h1>
+  <p>In this dataset an <b>interaction pattern</b> is what we can observe about the bank's past contact with a lead:
+    the previous campaign's outcome (<code>poutcome</code>), how many times they were contacted before (<code>previous</code>),
+    how long ago (<code>pdays</code>), and how many times this campaign has already called (<code>campaign</code>).
+    There is no call content, sentiment or transcript, so “interaction” here means contact <i>history</i>, not conversation.</p>
+</section>
+
+<div class="grid g-lead">
+  <div class="card">
+    <h2>Observed subscription rate by pattern</h2>
+    <p class="small text-2">Training leads only (the held-out portfolio is not used here). Cells with fewer than 100 leads are noisy.</p>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Table (scrolls horizontally on small screens)">
+    <table class="heat">
+      <thead><tr><th>Previous campaigns ↓ · This campaign →</th>{% for i in intensities %}<th class="num">{{ i }}</th>{% endfor %}</tr></thead>
+      <tbody>
+      {% for h in histories %}
+      <tr><td><b>{{ h }}</b></td>
+        {% for i in intensities %}{% set c = grid.get((h, i)) %}
+        <td class="cell" style="background: color-mix(in srgb, var(--accent) {{ ((c.conversion_rate if c else 0) * 70) | round(0) }}%, var(--surface))">
+          {% if c %}<div class="rate">{{ pct(c.conversion_rate) }}</div><div class="n">n = {{ "{:,}".format(c.n) }}</div>{% else %}–{% endif %}
+        </td>{% endfor %}
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    <div class="note" style="margin-top:12px">
+      <b>Reading it:</b> previous-campaign success is the single strongest history signal (roughly 6–7× the rate of new leads).
+      Within <i>every</i> history, conversion falls as this campaign's contacts pile up. The falls run roughly in parallel, so
+      repeated contact hurts all kinds of leads, not one particular kind.
+    </div>
+  </div>
+
+  <div class="stack">
+    {% if abl_chart %}
+    <div class="card">
+      <h2>Do interaction signals add predictive value?</h2>
+      <p class="small text-2">Same gradient-boosting model, different feature groups. Held-out PR-AUC (higher is better; random guessing = {{ pct(base_rate, 1) }}).</p>
+      {{ hbar_chart(abl_chart, "Held-out PR-AUC by feature set") }}
+      <p class="small" style="margin-top:8px"><b>Yes.</b> Interaction history alone lifts profile-only PR-AUC substantially, and adds on top of campaign context.
+        On a <b>later time period</b> (train on early contacts, test on the latest 20%), interaction history is the <i>most robust</i> group,
+        while campaign context (channel/month) stops helping. Details on <a href="/model#ablation">Model &amp; XAI</a>.</p>
+    </div>
+    {% endif %}
+    {% if pair_chart %}
+    <div class="card">
+      <h2>Which variables interact?</h2>
+      <p class="small text-2">Mean SHAP interaction strength (log-odds) on {{ "{:,}".format(inter.shap_interaction.sample_size) }} held-out leads.
+        Blocking all interactions lowers CV ROC-AUC from {{ "%.3f" | format(inter.additive_vs_full["full (interactions allowed)"].cv_roc_auc) }} to
+        {{ "%.3f" | format(inter.additive_vs_full["additive (no interactions)"].cv_roc_auc) }}.</p>
+      {{ hbar_chart(pair_chart, "Strongest pairwise interactions") }}
+      <ul class="reasons small" style="margin-top:8px">
+        <li><b>Supported:</b> recency × previous outcome is the strongest genuine interaction-history pair. For leads last contacted within ~200 days,
+          recency lifts the estimate 2–3× more after a past success than after a past failure. (Leads last contacted 400+ days ago get a large lift whatever the
+          outcome, but such leads only exist late in the file, so that is partly the drift artifact again.)</li>
+        <li><b>Not supported:</b> contacts-this-campaign × previous outcome is weak ({{ "%.3f" | format(hyp_campaign) }}). Repeated contact acts mostly on its own.</li>
+        <li><b>Caution:</b> day × month and channel × month rank high because together they reconstruct <i>when</i> a lead was contacted.
+          That is a data-collection-period effect, not customer behaviour.</li>
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2>How each interaction signal moves the model, on average</h2>
+  <div class="grid g3">
+    {% for item in importance if item.feature in ["poutcome", "pdays", "campaign", "previous"] %}
+    <div>
+      <h3>{{ item.label }}</h3>
+      <table><thead><tr><th>Value</th><th class="num">Avg. effect on odds</th><th class="num">Leads</th></tr></thead>
+        <tbody>{% for lv in item.levels %}
+          <tr><td>{{ lv.value }}</td><td class="num {{ 'delta-up' if lv.mean_log_odds > 0 else 'delta-down' }}">×{{ "%.2f" | format(2.718281828 ** lv.mean_log_odds) }}</td><td class="num muted">{{ "{:,}".format(lv.n) }}</td></tr>
+        {% endfor %}</tbody></table>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

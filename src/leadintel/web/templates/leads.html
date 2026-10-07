@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Leads · Lead Decision Intelligence{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>Lead prioritisation</h1>
+  <p>Held-out leads ranked by estimated chance of subscribing, with the action the current policy recommends.
+     Open a lead to see why, and to try what-if changes.</p>
+</section>
+<div class="card">
+  <form class="filters" hx-get="/leads" hx-target="#lead-table" hx-trigger="change, keyup changed delay:300ms from:input[name=q]" hx-push-url="true">
+    <label class="field">Recommended action
+      <select name="action">
+        <option value="">All actions</option>
+        {% for a in ACTION_ORDER %}<option value="{{ a }}" {% if filters.action == a %}selected{% endif %}>{{ ACTION_TITLE[a] }} ({{ "{:,}".format(counts.get(a, 0)) }})</option>{% endfor %}
+      </select>
+    </label>
+    <label class="field">Interaction history
+      <select name="history">
+        <option value="">Any history</option>
+        {% for h in histories %}<option {% if filters.history == h %}selected{% endif %}>{{ h }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="field">Sort by
+      <select name="sort">
+        <option value="probability" {% if filters.sort == "probability" %}selected{% endif %}>Highest estimate</option>
+        <option value="contacts" {% if filters.sort == "contacts" %}selected{% endif %}>Most contacted</option>
+      </select>
+    </label>
+    <label class="field">Lead ID
+      <input type="search" name="q" value="{{ filters.q }}" placeholder="e.g. L40123" autocomplete="off">
+    </label>
+    <noscript><button class="btn" type="submit">Apply</button></noscript>
+  </form>
+  <div id="lead-table" class="busy">{% include "_lead_table.html" %}</div>
+</div>
+{% endblock %}

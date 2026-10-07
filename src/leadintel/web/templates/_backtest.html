@@ -1,0 +1,37 @@
+{% from "_macros.html" import action_badge, pct, hbar_chart %}
+<div class="stack">
+  {% if error %}<div class="callout" role="alert">Invalid assumption: {{ error }}</div>{% endif %}
+  <div class="card">
+    <div class="card-head"><h2>Back-test on {{ "{:,}".format(backtest.n) }} held-out leads</h2>
+      <span class="small muted">follow-up line {{ pct(policy.break_even, 1) }}</span></div>
+    <div class="grid g3">
+      <div class="stat"><div class="label">Leads contacted</div><div class="value">{{ pct(backtest.contacted_share) }}</div>
+        <div class="sub">incl. human-review leads</div></div>
+      <div class="stat"><div class="label">Subscriptions captured</div><div class="value">{{ pct(backtest.conversions_captured) }}</div>
+        <div class="sub">random choice of the same size: {{ pct(backtest.contacted_share) }}</div></div>
+      <div class="stat"><div class="label">Calls avoided</div><div class="value">{{ "{:,}".format(backtest.calls_saved) }}</div>
+        <div class="sub">losing {{ backtest.conversions_forgone }} of {{ "{:,}".format(backtest.total_conversions) }} subscriptions</div></div>
+    </div>
+    <hr class="soft">
+    {{ hbar_chart(mix, "Share of leads per action under these assumptions") }}
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Table (scrolls horizontally on small screens)">
+    <table style="margin-top:8px">
+      <thead><tr><th>Action</th><th class="num">Leads</th><th class="num">Mean estimate</th><th class="num">Actually subscribed</th><th class="num">Share of subscriptions</th></tr></thead>
+      <tbody>{% for r in backtest.rows %}
+        <tr><td>{{ action_badge(r.action) }}</td><td class="num">{{ "{:,}".format(r.n) }}</td>
+          <td class="num">{{ pct(r.mean_probability, 1) if r.mean_probability is not none else "–" }}</td>
+          <td class="num">{{ pct(r.observed_rate, 1) if r.observed_rate is not none else "–" }}</td>
+          <td class="num">{{ pct(r.share_of_conversions) }}</td></tr>
+      {% endfor %}</tbody>
+    </table>
+    </div>
+    <p class="small text-2" style="margin-top:10px">“Mean estimate” vs “actually subscribed” is a calibration check per segment:
+      if the model is honest they should be close.</p>
+  </div>
+  <div class="card">
+    <h3>Illustrative value under these assumptions</h3>
+    <p class="num" style="margin:0">Policy: <b>{{ backtest.value_policy | eur }}</b> · Contact everyone: {{ backtest.value_contact_everyone | eur }}</p>
+    <p class="small muted" style="margin-top:6px">Value = subscriptions × value − contacts × cost, on these held-out leads. It is not a forecast of real
+      bank revenue: the costs are assumed, and the leads come from 2008–2010.</p>
+  </div>
+</div>

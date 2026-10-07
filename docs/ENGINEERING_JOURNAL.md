@@ -51,3 +51,30 @@ month/channel encode collection era; profile+interaction is the most robust set 
 Decision: deploy the full GB model (best in-distribution, which is how the demo
 portfolio is drawn), but label month/channel as "context, not levers" in the UI and make
 the drift result a headline limitation, not a footnote.
+
+## 2026-10-07 22:20 — Decision layer: 10-90 bootstrap band flagged 21 % for review; switched to 25-75
+The follow-up line (10 %) sits where most leads cluster, so an 80 % band flagged one lead
+in five, which is unusable. The middle-half band flags ~11 %, and those leads really are
+harder (Brier 0.093 inside vs 0.079 outside). Also found that bootstrap members are
+less extreme than the full model (an "88 %" lead had range 83-88 %), so the spread is
+now centred on the main estimate (`uncertainty.centered_interval`).
+
+## 2026-10-07 22:25 — Single-lead scoring 161 ms -> 24 ms by disabling OpenMP threads per call
+Thread start-up dominated one-row predictions across 16 HistGB models + SHAP.
+`threadpool_limits(1)` around live scoring; batch work (training) keeps all cores.
+
+## 2026-10-07 22:45 — Web stack: FastAPI + Jinja + HTMX, hand-written CSS instead of Tailwind CDN
+Followed the house stack except Tailwind: its docs say the Play CDN is "for development
+purposes only" (in-browser runtime compile). A ~300-line token-based stylesheet gives
+light/dark themes, no FOUC, no build step. HTMX is vendored (pinned 2.0.10, sha256 in
+docs) so the demo works offline. Charts are server-rendered SVG — no JS chart library.
+Action colours validated for colour-vision deficiency; light-mode low-contrast hues are
+always paired with text labels. axe WCAG 2.2 AA: 0 violations across 8 pages (fixed:
+muted text contrast, colour-only links, coloured numbers, focusable scroll regions).
+
+## 2026-10-07 22:50 — Caught two of my own over-claims while reviewing the UI
+(1) "A past success matters more when the contact was recent" was asserted from the
+interaction *magnitude* only. Checked direction: true for <=200 days (SHAP lift 1.35-1.42
+vs 0.40-0.68), but >400-day leads get a big lift regardless — a drift artifact. Copy now
+says exactly that. (2) Quantile bins labelled "0-2 contacts" and "1-37 previous" were
+wrong; count features now use explicit bins and others show real min-max per bin.

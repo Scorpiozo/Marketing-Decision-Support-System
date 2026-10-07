@@ -1,0 +1,78 @@
+{% macro action_badge(action) -%}
+<span class="badge act-{{ action }}"><span class="dot" aria-hidden="true"></span>{{ ACTION_TITLE[action] }}</span>
+{%- endmacro %}
+
+{% macro pct(x, digits=0) -%}{{ ("%." ~ digits ~ "f%%") | format(x * 100) }}{%- endmacro %}
+
+{# Horizontal bar chart. Labels and values are text tokens; colour only on marks. #}
+{% macro hbar_chart(chart, title) -%}
+{% set label_w = chart.extras.label_w %}
+<svg class="chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="{{ title }}">
+  <title>{{ title }}</title>
+  {% for b in chart.bars %}
+  <g class="mark">
+    <title>{{ b.tooltip }}</title>
+    <rect class="hit" x="0" y="{{ b.y - 6 }}" width="{{ chart.width }}" height="{{ b.h + 12 }}"></rect>
+    <text x="{{ label_w - 10 }}" y="{{ b.y + b.h / 2 + 4 }}" text-anchor="end">{{ b.label | truncate((label_w / 6.4) | int, True, "…") }}</text>
+    <path class="bar {{ b.css }}" d="M{{ b.x }},{{ b.y }} h{{ [b.w - 4, 0] | max }} a4,4 0 0 1 4,4 v{{ b.h - 8 }} a4,4 0 0 1 -4,4 h-{{ [b.w - 4, 0] | max }} z"></path>
+    <text class="v" x="{{ b.x + b.w + 6 }}" y="{{ b.y + b.h / 2 + 4 }}">{{ b.text }}</text>
+  </g>
+  {% endfor %}
+  <line class="axis" x1="{{ label_w }}" x2="{{ label_w }}" y1="0" y2="{{ chart.height }}"></line>
+</svg>
+{%- endmacro %}
+
+{# Diverging SHAP chart: right = raises odds (blue), left = lowers odds (red). #}
+{% macro waterfall(chart, title, context_rows=()) -%}
+<svg class="chart" viewBox="0 0 {{ chart.width }} {{ chart.height + 18 }}" role="img" aria-label="{{ title }}">
+  <title>{{ title }}</title>
+  <text x="{{ chart.extras.centre - 8 }}" y="{{ chart.height + 14 }}" text-anchor="end" font-size="11">◀ lowers odds</text>
+  <text x="{{ chart.extras.centre + 8 }}" y="{{ chart.height + 14 }}" font-size="11">raises odds ▶</text>
+  {% for b in chart.bars %}
+  <g class="mark">
+    <title>{{ b.tooltip }}</title>
+    <rect class="hit" x="0" y="{{ b.y - 4 }}" width="{{ chart.width }}" height="{{ b.h + 8 }}"></rect>
+    <text x="6" y="{{ b.y + b.h / 2 + 4 }}">{{ b.label | truncate(36, True, '…') }}{% if loop.index0 in context_rows %} ⚑{% endif %}</text>
+    <rect class="bar {{ b.css }}" x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="3"></rect>
+    {% if b.value >= 0 %}
+    <text class="v" x="{{ b.x + b.w + 5 }}" y="{{ b.y + b.h / 2 + 4 }}">{{ b.text }}</text>
+    {% else %}
+    <text class="v" x="{{ b.x - 5 }}" y="{{ b.y + b.h / 2 + 4 }}" text-anchor="end">{{ b.text }}</text>
+    {% endif %}
+  </g>
+  {% endfor %}
+  <line class="centre" x1="{{ chart.extras.centre }}" x2="{{ chart.extras.centre }}" y1="0" y2="{{ chart.height }}"></line>
+</svg>
+{%- endmacro %}
+
+{# Line chart in a unit square (ROC / PR / reliability). #}
+{% macro xy_chart(chart, title, xlabel, ylabel, show_points=False) -%}
+{% set pad = chart.extras.pad %}
+<svg class="chart" viewBox="0 0 {{ chart.width }} {{ chart.height + 16 }}" role="img" aria-label="{{ title }}">
+  <title>{{ title }}</title>
+  {% for t in chart.ticks %}
+  <line class="grid" x1="{{ pad }}" x2="{{ pad + chart.extras.pw }}" y1="{{ t.y }}" y2="{{ t.y }}"></line>
+  <text x="{{ pad - 6 }}" y="{{ t.y + 4 }}" text-anchor="end" font-size="11">{{ t.ylabel }}</text>
+  <text x="{{ t.x }}" y="{{ 12 + chart.extras.ph + 16 }}" text-anchor="middle" font-size="11">{{ t.label }}</text>
+  {% endfor %}
+  {% if chart.extras.diagonal %}<path class="diag" d="{{ chart.extras.diagonal }}"></path>{% endif %}
+  {% for line in chart.lines %}
+  <path class="line" d="{{ line.d }}"></path>
+  {% if show_points %}{% for p in line.points %}<g class="mark"><title>{{ p.tip }}</title><circle class="pt" cx="{{ p.x }}" cy="{{ p.y }}" r="5"></circle></g>{% endfor %}{% endif %}
+  {% endfor %}
+  <text x="{{ pad + chart.extras.pw / 2 }}" y="{{ chart.height + 14 }}" text-anchor="middle" font-size="11">{{ xlabel }}</text>
+  <text x="10" y="{{ 12 + chart.extras.ph / 2 }}" text-anchor="middle" font-size="11" transform="rotate(-90 10 {{ 12 + chart.extras.ph / 2 }})">{{ ylabel }}</text>
+</svg>
+{%- endmacro %}
+
+{# Probability with its uncertainty band and the policy lines. #}
+{% macro range_bar(p, lo, hi, policy, scale=1.0) -%}
+{% set s = 100 / scale %}
+<div class="range-bar" role="img" aria-label="Estimate {{ pct(p) }}, likely range {{ pct(lo) }} to {{ pct(hi) }}">
+  <div class="band" style="left: {{ [lo * s, 100] | min }}%; width: {{ [[(hi - lo) * s, 1] | max, 100] | min }}%"></div>
+  <div class="th" style="left: {{ [policy.break_even * s, 100] | min }}%" title="Follow-up line {{ pct(policy.break_even) }}"></div>
+  <div class="th" style="left: {{ [policy.priority_threshold * s, 100] | min }}%" title="Priority line {{ pct(policy.priority_threshold) }}"></div>
+  <div class="pt" style="left: {{ [p * s, 100] | min }}%"></div>
+</div>
+<div class="range-legend"><span>0%</span><span>┊ follow-up {{ pct(policy.break_even) }} · ┊ priority {{ pct(policy.priority_threshold) }}</span><span>{{ pct(scale) }}</span></div>
+{%- endmacro %}
