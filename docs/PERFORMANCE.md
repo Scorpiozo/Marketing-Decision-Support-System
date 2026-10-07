@@ -17,7 +17,7 @@ Measured, not estimated. "Before" numbers come from running the legacy app
 | Explanation per lead | None (static text) | Included in the 27 ms (exact TreeSHAP) |
 | Server memory | not measured | 145 MB RSS |
 
-Docker image size: _measured in DEPLOYMENT.md_
+Docker image size: **1.11 GB** (from 2.75 GB first draft; see [DEPLOYMENT.md](DEPLOYMENT.md)). Legacy: no container; its environment needed TensorFlow (~600 MB+) and Jupyter just to serve the dashboard.
 
 ## Page latency (server time, 30 requests each)
 

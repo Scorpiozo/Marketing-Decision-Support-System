@@ -28,7 +28,12 @@ docker run --rm -p 8000:8000 \
 # open http://localhost:8000 → login page
 ```
 
-Docker image size: _to be recorded after the slimmed build_.
+Docker image size (measured 2026-10-07, `docker images`): **1.11 GB**, down from 2.75 GB for the
+first draft. The first draft lost space to a `chown -R` layer that duplicated the 650 MB virtualenv,
+the uv download cache baked into the image, and `fastapi[standard]` cloud/telemetry extras. The
+remaining weight is the scientific stack (scipy, pandas, scikit-learn) plus numba/llvmlite, which
+SHAP needs at runtime (~200 MB). Container check: `/healthz` OK, all pages 200, JSON API OK,
+runs as non-root user `app`, honours an injected `PORT`, model + portfolio load in 0.54 s.
 
 ## Railway (CLI)
 
