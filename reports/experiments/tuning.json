@@ -1,0 +1,175 @@
+{
+  "gradient_boosting": {
+    "best": {
+      "params": {
+        "learning_rate": 0.03,
+        "max_leaf_nodes": 31,
+        "min_samples_leaf": 40,
+        "l2_regularization": 1.0,
+        "max_iter": 300
+      },
+      "log_loss": 0.2843,
+      "roc_auc": 0.799
+    },
+    "all": [
+      {
+        "params": {
+          "learning_rate": 0.03,
+          "max_leaf_nodes": 31,
+          "min_samples_leaf": 40,
+          "l2_regularization": 1.0,
+          "max_iter": 300
+        },
+        "log_loss": 0.2843,
+        "roc_auc": 0.799
+      },
+      {
+        "params": {
+          "learning_rate": 0.05,
+          "max_leaf_nodes": 15,
+          "min_samples_leaf": 40,
+          "l2_regularization": 1.0,
+          "max_iter": 300
+        },
+        "log_loss": 0.2846,
+        "roc_auc": 0.7984
+      },
+      {
+        "params": {
+          "learning_rate": 0.03,
+          "max_leaf_nodes": 15,
+          "min_samples_leaf": 40,
+          "l2_regularization": 1.0,
+          "max_iter": 300
+        },
+        "log_loss": 0.2853,
+        "roc_auc": 0.7973
+      },
+      {
+        "params": {
+          "learning_rate": 0.05,
+          "max_leaf_nodes": 31,
+          "min_samples_leaf": 40,
+          "l2_regularization": 1.0,
+          "max_iter": 300
+        },
+        "log_loss": 0.2855,
+        "roc_auc": 0.7965
+      },
+      {
+        "params": {
+          "learning_rate": 0.1,
+          "max_leaf_nodes": 15,
+          "min_samples_leaf": 40,
+          "l2_regularization": 1.0,
+          "max_iter": 300
+        },
+        "log_loss": 0.2869,
+        "roc_auc": 0.7945
+      },
+      {
+        "params": {
+          "learning_rate": 0.1,
+          "max_leaf_nodes": 31,
+          "min_samples_leaf": 40,
+          "l2_regularization": 1.0,
+          "max_iter": 300
+        },
+        "log_loss": 0.2919,
+        "roc_auc": 0.7875
+      }
+    ]
+  },
+  "random_forest": {
+    "best": {
+      "params": {
+        "min_samples_leaf": 10,
+        "max_features": 0.5
+      },
+      "log_loss": 0.287,
+      "roc_auc": 0.797
+    },
+    "all": [
+      {
+        "params": {
+          "min_samples_leaf": 10,
+          "max_features": 0.5
+        },
+        "log_loss": 0.287,
+        "roc_auc": 0.797
+      },
+      {
+        "params": {
+          "min_samples_leaf": 30,
+          "max_features": 0.5
+        },
+        "log_loss": 0.2884,
+        "roc_auc": 0.7952
+      },
+      {
+        "params": {
+          "min_samples_leaf": 3,
+          "max_features": "sqrt"
+        },
+        "log_loss": 0.2888,
+        "roc_auc": 0.7938
+      },
+      {
+        "params": {
+          "min_samples_leaf": 10,
+          "max_features": "sqrt"
+        },
+        "log_loss": 0.2894,
+        "roc_auc": 0.7949
+      },
+      {
+        "params": {
+          "min_samples_leaf": 3,
+          "max_features": 0.5
+        },
+        "log_loss": 0.2927,
+        "roc_auc": 0.7909
+      },
+      {
+        "params": {
+          "min_samples_leaf": 30,
+          "max_features": "sqrt"
+        },
+        "log_loss": 0.2933,
+        "roc_auc": 0.7895
+      }
+    ]
+  },
+  "logistic_regression": {
+    "best": {
+      "params": {
+        "C": 0.3
+      },
+      "log_loss": 0.3017,
+      "roc_auc": 0.764
+    },
+    "all": [
+      {
+        "params": {
+          "C": 0.3
+        },
+        "log_loss": 0.3017,
+        "roc_auc": 0.764
+      },
+      {
+        "params": {
+          "C": 3.0
+        },
+        "log_loss": 0.3018,
+        "roc_auc": 0.7638
+      },
+      {
+        "params": {
+          "C": 0.03
+        },
+        "log_loss": 0.3025,
+        "roc_auc": 0.7639
+      }
+    ]
+  }
+}

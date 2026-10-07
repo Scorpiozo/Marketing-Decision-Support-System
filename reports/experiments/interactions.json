@@ -1,0 +1,325 @@
+{
+  "additive_vs_full": {
+    "additive (no interactions)": {
+      "cv_roc_auc": 0.7745,
+      "cv_pr_auc": 0.411,
+      "cv_log_loss": 0.3005
+    },
+    "full (interactions allowed)": {
+      "cv_roc_auc": 0.799,
+      "cv_pr_auc": 0.4508,
+      "cv_log_loss": 0.2843
+    }
+  },
+  "shap_interaction": {
+    "sample_size": 1500,
+    "share_of_attribution_from_interactions": 0.5242,
+    "main_effects_mean_abs": {
+      "age": 0.0949,
+      "job": 0.017,
+      "marital": 0.1315,
+      "education": 0.0341,
+      "default": 0.0004,
+      "balance": 0.1378,
+      "housing": 0.1432,
+      "loan": 0.0479,
+      "contact": 0.4028,
+      "day": 0.1539,
+      "month": 0.2735,
+      "campaign": 0.1037,
+      "pdays": 0.2537,
+      "previous": 0.0238,
+      "poutcome": 0.1959
+    },
+    "top_pairs": [
+      {
+        "pair": [
+          "pdays",
+          "poutcome"
+        ],
+        "label": "Days since previous-campaign contact \u00d7 Previous campaign outcome",
+        "mean_abs_interaction": 0.2312
+      },
+      {
+        "pair": [
+          "day",
+          "month"
+        ],
+        "label": "Day of month \u00d7 Contact month",
+        "mean_abs_interaction": 0.2115
+      },
+      {
+        "pair": [
+          "contact",
+          "month"
+        ],
+        "label": "Contact channel \u00d7 Contact month",
+        "mean_abs_interaction": 0.1915
+      },
+      {
+        "pair": [
+          "housing",
+          "month"
+        ],
+        "label": "Housing loan \u00d7 Contact month",
+        "mean_abs_interaction": 0.1198
+      },
+      {
+        "pair": [
+          "housing",
+          "contact"
+        ],
+        "label": "Housing loan \u00d7 Contact channel",
+        "mean_abs_interaction": 0.0998
+      },
+      {
+        "pair": [
+          "month",
+          "pdays"
+        ],
+        "label": "Contact month \u00d7 Days since previous-campaign contact",
+        "mean_abs_interaction": 0.0781
+      },
+      {
+        "pair": [
+          "contact",
+          "day"
+        ],
+        "label": "Contact channel \u00d7 Day of month",
+        "mean_abs_interaction": 0.0458
+      },
+      {
+        "pair": [
+          "month",
+          "poutcome"
+        ],
+        "label": "Contact month \u00d7 Previous campaign outcome",
+        "mean_abs_interaction": 0.0411
+      },
+      {
+        "pair": [
+          "housing",
+          "day"
+        ],
+        "label": "Housing loan \u00d7 Day of month",
+        "mean_abs_interaction": 0.0378
+      },
+      {
+        "pair": [
+          "balance",
+          "contact"
+        ],
+        "label": "Account balance \u00d7 Contact channel",
+        "mean_abs_interaction": 0.034
+      },
+      {
+        "pair": [
+          "balance",
+          "day"
+        ],
+        "label": "Account balance \u00d7 Day of month",
+        "mean_abs_interaction": 0.033
+      },
+      {
+        "pair": [
+          "housing",
+          "pdays"
+        ],
+        "label": "Housing loan \u00d7 Days since previous-campaign contact",
+        "mean_abs_interaction": 0.0323
+      }
+    ],
+    "hypothesised_pairs": [
+      {
+        "pair": [
+          "pdays",
+          "poutcome"
+        ],
+        "label": "Days since previous-campaign contact \u00d7 Previous campaign outcome",
+        "mean_abs_interaction": 0.2312
+      },
+      {
+        "pair": [
+          "contact",
+          "campaign"
+        ],
+        "label": "Contact channel \u00d7 Contacts this campaign",
+        "mean_abs_interaction": 0.0283
+      },
+      {
+        "pair": [
+          "previous",
+          "poutcome"
+        ],
+        "label": "Contacts before this campaign \u00d7 Previous campaign outcome",
+        "mean_abs_interaction": 0.0122
+      },
+      {
+        "pair": [
+          "campaign",
+          "poutcome"
+        ],
+        "label": "Contacts this campaign \u00d7 Previous campaign outcome",
+        "mean_abs_interaction": 0.0099
+      },
+      {
+        "pair": [
+          "campaign",
+          "previous"
+        ],
+        "label": "Contacts this campaign \u00d7 Contacts before this campaign",
+        "mean_abs_interaction": 0.0039
+      }
+    ]
+  },
+  "observed_tables": {
+    "history_x_intensity": [
+      {
+        "history": "New to campaigns",
+        "intensity": "1 contact",
+        "conversion_rate": 0.1124,
+        "n": 10828
+      },
+      {
+        "history": "New to campaigns",
+        "intensity": "2\u20133 contacts",
+        "conversion_rate": 0.0887,
+        "n": 11886
+      },
+      {
+        "history": "New to campaigns",
+        "intensity": "4+ contacts",
+        "conversion_rate": 0.0664,
+        "n": 6870
+      },
+      {
+        "history": "Previously contacted, outcome unclear",
+        "intensity": "1 contact",
+        "conversion_rate": 0.191,
+        "n": 581
+      },
+      {
+        "history": "Previously contacted, outcome unclear",
+        "intensity": "2\u20133 contacts",
+        "conversion_rate": 0.1713,
+        "n": 613
+      },
+      {
+        "history": "Previously contacted, outcome unclear",
+        "intensity": "4+ contacts",
+        "conversion_rate": 0.1047,
+        "n": 296
+      },
+      {
+        "history": "Previously converted",
+        "intensity": "1 contact",
+        "conversion_rate": 0.6755,
+        "n": 678
+      },
+      {
+        "history": "Previously converted",
+        "intensity": "2\u20133 contacts",
+        "conversion_rate": 0.6351,
+        "n": 433
+      },
+      {
+        "history": "Previously converted",
+        "intensity": "4+ contacts",
+        "conversion_rate": 0.4894,
+        "n": 94
+      },
+      {
+        "history": "Previously declined",
+        "intensity": "1 contact",
+        "conversion_rate": 0.1341,
+        "n": 1939
+      },
+      {
+        "history": "Previously declined",
+        "intensity": "2\u20133 contacts",
+        "conversion_rate": 0.1204,
+        "n": 1503
+      },
+      {
+        "history": "Previously declined",
+        "intensity": "4+ contacts",
+        "conversion_rate": 0.0828,
+        "n": 447
+      }
+    ],
+    "history_x_contact": [
+      {
+        "history": "New to campaigns",
+        "contact": "cellular",
+        "conversion_rate": 0.1205,
+        "n": 17427
+      },
+      {
+        "history": "New to campaigns",
+        "contact": "telephone",
+        "conversion_rate": 0.1148,
+        "n": 1830
+      },
+      {
+        "history": "New to campaigns",
+        "contact": "unknown",
+        "conversion_rate": 0.0404,
+        "n": 10327
+      },
+      {
+        "history": "Previously contacted, outcome unclear",
+        "contact": "cellular",
+        "conversion_rate": 0.1684,
+        "n": 1330
+      },
+      {
+        "history": "Previously contacted, outcome unclear",
+        "contact": "telephone",
+        "conversion_rate": 0.1314,
+        "n": 137
+      },
+      {
+        "history": "Previously contacted, outcome unclear",
+        "contact": "unknown",
+        "conversion_rate": 0.2174,
+        "n": 23
+      },
+      {
+        "history": "Previously converted",
+        "contact": "cellular",
+        "conversion_rate": 0.6476,
+        "n": 1104
+      },
+      {
+        "history": "Previously converted",
+        "contact": "telephone",
+        "conversion_rate": 0.6854,
+        "n": 89
+      },
+      {
+        "history": "Previously converted",
+        "contact": "unknown",
+        "conversion_rate": 0.25,
+        "n": 12
+      },
+      {
+        "history": "Previously declined",
+        "contact": "cellular",
+        "conversion_rate": 0.1226,
+        "n": 3604
+      },
+      {
+        "history": "Previously declined",
+        "contact": "telephone",
+        "conversion_rate": 0.1303,
+        "n": 261
+      },
+      {
+        "history": "Previously declined",
+        "contact": "unknown",
+        "conversion_rate": 0.0833,
+        "n": 24
+      }
+    ]
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "input": "51 one-hot/scaled features reshaped to (51, 1)",
+  "original_order_by_seed": [
+    {
+      "roc_auc": 0.7904,
+      "pr_auc": 0.4145,
+      "brier": 0.0842
+    },
+    {
+      "roc_auc": 0.7969,
+      "pr_auc": 0.4401,
+      "brier": 0.0825
+    },
+    {
+      "roc_auc": 0.7887,
+      "pr_auc": 0.4323,
+      "brier": 0.0829
+    }
+  ],
+  "original_order_mean_std": {
+    "roc_auc": [
+      0.792,
+      0.0035
+    ],
+    "pr_auc": [
+      0.429,
+      0.0107
+    ],
+    "brier": [
+      0.0832,
+      0.0007
+    ]
+  },
+  "permuted_columns": [
+    {
+      "roc_auc": 0.789,
+      "pr_auc": 0.4361,
+      "brier": 0.0833
+    },
+    {
+      "roc_auc": 0.7905,
+      "pr_auc": 0.4424,
+      "brier": 0.0825
+    },
+    {
+      "roc_auc": 0.7868,
+      "pr_auc": 0.4315,
+      "brier": 0.0831
+    }
+  ],
+  "permuted_mean_std": {
+    "roc_auc": [
+      0.7888,
+      0.0015
+    ],
+    "pr_auc": [
+      0.4367,
+      0.0045
+    ],
+    "brier": [
+      0.083,
+      0.0003
+    ]
+  },
+  "mean_fit_seconds": 12.5
+}
