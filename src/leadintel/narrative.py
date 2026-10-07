@@ -13,8 +13,7 @@ from leadintel.service import Assessment
 def driver_sentence(c: Contribution) -> str:
     verb = "raised" if c.direction == "up" else "lowered"
     factor = c.odds_multiplier if c.direction == "up" else 1 / c.odds_multiplier
-    flag = " ⚑ context" if c.is_context else ""
-    return f"{c.label}: {c.value} — {verb} the odds ×{factor:.1f}{flag}"
+    return f"{c.label}: {c.value} — {verb} the odds ×{factor:.1f}"
 
 
 def summary(a: Assessment) -> str:
@@ -25,7 +24,7 @@ def summary(a: Assessment) -> str:
     estimate = f"Estimated chance of subscribing: {a.probability:.0%}"
     if pat.observed_rate is not None and pat.observed_n >= 30:
         estimate += (
-            f"; historically, {pat.observed_rate:.0%} of the {pat.observed_n:,} training leads "
+            f"; historically, {pat.observed_rate:.0%} of the {pat.observed_n:,} past leads "
             "with the same interaction pattern subscribed"
         )
     parts.append(estimate + ".")

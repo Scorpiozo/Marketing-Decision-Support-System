@@ -26,13 +26,13 @@ def lead_id(client: TestClient) -> str:
 @pytest.mark.parametrize(
     "path,needle",
     [
-        ("/", "Which leads deserve another call"),
+        ("/", "Know which leads to call next"),
         ("/leads", "Lead prioritisation"),
         ("/leads?action=stop&page=2", "Stop repeated follow-up"),
-        ("/patterns", "Observed subscription rate by pattern"),
+        ("/patterns", "Subscription rate by interaction pattern"),
         ("/model", "Model comparison"),
-        ("/policy", "Back-test on"),
-        ("/method", "Limitations"),
+        ("/policy", "Contact strategy simulator"),
+        ("/about", "How it works"),
     ],
 )
 def test_pages_render(client: TestClient, path: str, needle: str) -> None:
@@ -46,8 +46,8 @@ def test_lead_page_has_decision_explanation_and_caveat(client: TestClient, lead_
     assert r.status_code == 200
     for needle in (
         "Recommended action",
-        "Why the model estimated",
-        "no call transcripts",
+        "Why this recommendation",
+        "likelihood to subscribe",
         "What-if",
     ):
         assert needle in r.text
@@ -175,3 +175,20 @@ def test_live_scoring_is_rate_limited(
     codes = [client.post("/api/v1/assess", json=body).status_code for _ in range(5)]
     assert codes[:3] == [200, 200, 200] and codes[3:] == [429, 429]
     web._hits.clear()
+
+
+def test_old_method_route_redirects(client: TestClient) -> None:
+    r = client.get("/method", follow_redirects=False)
+    assert r.status_code == 301 and r.headers["location"] == "/about"
+
+
+def test_insights_are_consistent(client: TestClient) -> None:
+    ins = web.svc().insights
+    assert ins["gains"][0] == [0.0, 0.0] and ins["gains"][-1] == [1.0, 1.0]
+    assert sum(r["n"] for r in ins["by_contacts"]) == len(web.svc().portfolio)
+
+
+def test_ui_has_no_prototype_wording(client: TestClient) -> None:
+    for path in ("/", "/leads", "/patterns", "/model", "/policy", "/about"):
+        text = client.get(path).text.lower()
+        assert "prototype" not in text and "faculty" not in text and "academic" not in text

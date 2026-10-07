@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}About · Lead Decision Intelligence{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>How it works</h1>
+  <p>Lead Decision Intelligence combines a machine-learning model, an explainability layer and a configurable
+    contact strategy into one workflow for relationship managers.</p>
+</section>
+
+<div class="card">
+  <h2>From data to decision</h2>
+  <div class="flow">
+    <div class="flow-step"><span class="flow-n">1</span><b>Lead data</b><p>Customer profile, campaign context and interaction history for every lead.</p></div>
+    <div class="flow-step"><span class="flow-n">2</span><b>Validation</b><p>Every record is checked for valid values and a consistent contact history.</p></div>
+    <div class="flow-step"><span class="flow-n">3</span><b>Prediction</b><p>Gradient boosting estimates the likelihood that the lead subscribes.</p></div>
+    <div class="flow-step"><span class="flow-n">4</span><b>Explanation</b><p>TreeSHAP shows exactly which signals raised or lowered that likelihood.</p></div>
+    <div class="flow-step"><span class="flow-n">5</span><b>Strategy</b><p>Cost-aware rules turn the likelihood into a next action, with a confidence check.</p></div>
+    <div class="flow-step"><span class="flow-n">6</span><b>Action</b><p>The relationship manager sees the action, the reasons and can test what-if scenarios.</p></div>
+  </div>
+</div>
+
+<div class="grid g3" style="margin-top:16px">
+  <div class="card">
+    <h2>Data</h2>
+    <p class="small text-2">UCI Bank Marketing dataset: {{ "{:,}".format(card.data.rows) }} direct-marketing phone contacts of a Portuguese bank,
+      with the outcome of a term-deposit offer. {{ card.features | length }} input fields in three groups:</p>
+    <ul class="small reasons">
+      <li><b>Customer profile:</b> age, job, marital status, education, balance, loans, credit default</li>
+      <li><b>Campaign context:</b> contact channel, month, day</li>
+      <li><b>Interaction history:</b> contacts this campaign, contacts before, days since last contact, previous outcome</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2>Model</h2>
+    <ul class="small reasons">
+      <li><b>{{ card.model_display_name }}</b>, selected from six approaches (logistic regression, decision tree, random forest, gradient boosting, neural network, 1D CNN)</li>
+      <li>Trained on {{ "{:,}".format(card.data.dev_rows) }} leads with 5-fold cross-validation; evaluated on {{ "{:,}".format(card.data.test_rows) }} unseen leads</li>
+      <li>ROC-AUC {{ "%.3f" | format(card.test_metrics.roc_auc) }}, calibrated probabilities</li>
+      <li>Likely range from {{ card.bootstrap_members }} re-trained model variants</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2>Technology</h2>
+    <div class="chips">
+      {% for t in ["Python 3.12", "scikit-learn", "SHAP", "pandas", "FastAPI", "Jinja2", "HTMX", "SVG charts", "Docker", "Railway"] %}<span class="chip">{{ t }}</span>{% endfor %}
+    </div>
+    <p class="small text-2" style="margin-top:10px">The model is trained offline and loaded once at start-up; pages render on the server in milliseconds.</p>
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2>Integration API</h2>
+  <p class="small text-2">Any CRM or campaign tool can score a lead over HTTP and receive the likelihood, action, reasons and explanation.
+    Interactive documentation: <a href="/api/docs">/api/docs</a>.</p>
+  <pre class="code">POST /api/v1/assess
+{"age": 41, "job": "management", "marital": "married", "education": "tertiary",
+ "default": "no", "balance": 1500, "housing": "no", "loan": "no",
+ "contact": "cellular", "day": 12, "month": "may",
+ "campaign": 1, "pdays": 120, "previous": 2, "poutcome": "success"}
+
+→ {"probability": …, "decision": {"action": "prioritise", "reasons": […]}, "explanation": {…}}</pre>
+</div>
+{% endblock %}

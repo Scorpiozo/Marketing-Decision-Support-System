@@ -17,6 +17,7 @@ import pandas as pd
 from pydantic import BaseModel
 from threadpoolctl import threadpool_limits
 
+from leadintel import insights
 from leadintel.config import REPORTS_DIR, Settings
 from leadintel.explain import Explainer, Explanation
 from leadintel.patterns import history_label, intensity_label
@@ -249,6 +250,10 @@ class ScoringService:
         total = len(pf)
         start = (max(page, 1) - 1) * per_page
         return pf.iloc[start : start + per_page], total
+
+    @cached_property
+    def insights(self) -> dict[str, Any]:
+        return insights.compute(self.portfolio)
 
     # ---- research results (read-only) ----------------------------------------------
 

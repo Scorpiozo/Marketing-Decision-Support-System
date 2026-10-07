@@ -3,18 +3,14 @@
 <div class="callout" role="alert"><b>This combination can't be scored.</b>
   <ul class="reasons">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
 {% else %}
-<div class="card">
+<div class="card whatif">
   <div class="eyebrow">What-if result</div>
-  <div class="kpi-row" style="align-items:baseline">
-    <div><span class="muted small">Before</span><br><b class="num">{{ pct(original.probability) }}</b> {{ action_badge(original.decision.action.value) }}</div>
-    <div class="muted" aria-hidden="true">→</div>
-    <div><span class="muted small">After</span><br><b class="num">{{ pct(a.probability) }}</b> {{ action_badge(a.decision.action.value) }}</div>
+  <div class="compare">
+    <div><span class="muted small">Before</span><div class="big num">{{ pct(original.probability) }}</div>{{ action_badge(original.decision.action.value) }}</div>
+    <div class="arrow" aria-hidden="true">→</div>
+    <div><span class="muted small">After</span><div class="big num">{{ pct(a.probability) }}</div>{{ action_badge(a.decision.action.value) }}</div>
   </div>
-  {% if a.decision.action != original.decision.action %}
-  <p class="small" style="margin-top:8px"><b>The recommendation changed.</b> {{ a.decision.reasons[0] }}</p>
-  {% else %}
-  <p class="small text-2" style="margin-top:8px">Same recommendation. {{ a.decision.reasons[0] }}</p>
-  {% endif %}
+  <p class="small" style="margin-top:8px">{% if a.decision.action != original.decision.action %}<b>The recommendation changed.</b>{% else %}Same recommendation.{% endif %} {{ a.decision.reasons[0] }}</p>
   {% if changes.edited %}
   <div class="eyebrow" style="margin-top:6px">Fields you changed</div>
   <table>
@@ -26,7 +22,7 @@
   </table>
   {% endif %}
   {% if changes.shifted %}
-  <div class="eyebrow" style="margin-top:12px">Unchanged fields whose effect shifted (interaction effects)</div>
+  <div class="eyebrow" style="margin-top:12px">Linked effects (feature interactions)</div>
   <table>
     <thead><tr><th>Field</th><th>Value</th><th class="num">Change in odds</th></tr></thead>
     <tbody>{% for c in changes.shifted %}
@@ -35,9 +31,7 @@
     {% endfor %}</tbody>
   </table>
   <p class="small muted" style="margin-top:4px">These fields kept their value, but the model weighs them differently in the new combination.
-    For example, a recent previous contact lifts the estimate far more after a past success than after a past failure.</p>
+    For example, a recent previous contact counts for much more after a past success than after a past failure.</p>
   {% endif %}
-  <p class="small muted" style="margin-top:8px">{{ view.summary }}</p>
-  {% if a.caveats | length > 1 %}<div class="callout">{{ a.caveats[1] }}</div>{% endif %}
 </div>
 {% endif %}

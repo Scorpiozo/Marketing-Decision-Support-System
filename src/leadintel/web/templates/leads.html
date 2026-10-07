@@ -3,9 +3,13 @@
 {% block content %}
 <section class="page-head">
   <h1>Lead prioritisation</h1>
-  <p>Held-out leads ranked by estimated chance of subscribing, with the action the current policy recommends.
+  <p>All scored leads, ranked by likelihood to subscribe, with the recommended next action.
      Open a lead to see why, and to try what-if changes.</p>
 </section>
+<nav class="chip-row" aria-label="Filter by action">
+  <a class="chip {% if not filters.action %}on{% endif %}" href="/leads">All <b class="num">{{ "{:,}".format(counts.values() | sum) }}</b></a>
+  {% for a in ACTION_ORDER %}<a class="chip {% if filters.action == a %}on{% endif %}" href="/leads?action={{ a }}"><span class="dot act-{{ a }}" aria-hidden="true"></span>{{ ACTION_TITLE[a] }} <b class="num">{{ "{:,}".format(counts.get(a, 0)) }}</b></a>{% endfor %}
+</nav>
 <div class="card">
   <form class="filters" hx-get="/leads" hx-target="#lead-table" hx-trigger="change, keyup changed delay:300ms from:input[name=q]" hx-push-url="true">
     <label class="field">Recommended action

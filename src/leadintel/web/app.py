@@ -28,10 +28,10 @@ from leadintel.config import Settings
 from leadintel.features import FEATURE_GROUP_OF, FEATURE_LABELS
 from leadintel.models import DISPLAY_NAMES
 from leadintel.patterns import HISTORY_ORDER, INTENSITY_ORDER
-from leadintel.policy import ACTION_NEXT_STEP, ACTION_ORDER, ACTION_TITLE, Action, PolicyConfig
+from leadintel.policy import ACTION_ORDER, ACTION_TITLE, PolicyConfig
 from leadintel.schema import CATEGORY_LEVELS, Lead
 from leadintel.service import Assessment, ScoringService
-from leadintel.web import charts
+from leadintel.web import views
 
 HERE = Path(__file__).parent
 POLICY_COOKIE = "policy"
@@ -172,22 +172,7 @@ def render(request: Request, name: str, **ctx: Any) -> HTMLResponse:
 
 @app.get("/", response_class=HTMLResponse)
 def overview(request: Request) -> HTMLResponse:
-    s, cfg = svc(), policy_from(request)
-    backtest = s.policy_backtest(cfg)
-    top, _ = s.table(cfg, action=Action.PRIORITISE.value, per_page=6)
-    ablation = {
-        (r["feature_set"], r["model"]): r
-        for r in s.experiments.get("ablation", {}).get("random_split", [])
-    }
-    return render(
-        request,
-        "overview.html",
-        backtest=backtest,
-        mix=_action_mix_chart(backtest),
-        top=top.to_dict("records"),
-        card=s.card,
-        ablation=ablation,
-    )
+    return render(request, "overview.html", **views.dashboard(svc(), policy_from(request)))
 
 
 @app.get("/leads", response_class=HTMLResponse)
@@ -219,18 +204,25 @@ def leads(
 
 @app.get("/leads/{lead_id}", response_class=HTMLResponse)
 def lead_page(request: Request, lead_id: str) -> HTMLResponse:
-    s = svc()
+    s, cfg = svc(), policy_from(request)
     if lead_id not in s.portfolio.index:
         raise HTTPException(404, f"No lead with id {lead_id}")
-    a = s.assess(s.lead(lead_id), policy_from(request), lead_id)
+    a = s.assess(s.lead(lead_id), cfg, lead_id)
     return render(
-        request, "lead.html", active="leads", a=a, view=_assessment_view(a), levels=CATEGORY_LEVELS
+        request,
+        "lead.html",
+        active="leads",
+        a=a,
+        view=views.assessment(a, cfg),
+        levels=CATEGORY_LEVELS,
     )
 
 
 @app.post("/leads/{lead_id}/whatif", response_class=HTMLResponse)
 async def whatif(request: Request, lead_id: str) -> HTMLResponse:
     s, cfg = svc(), policy_from(request)
+    if lead_id not in s.portfolio.index:
+        raise HTTPException(404, f"No lead with id {lead_id}")
     original = s.assess(s.lead(lead_id), cfg, lead_id)
     form = dict(await request.form())
     try:
@@ -243,99 +235,32 @@ async def whatif(request: Request, lead_id: str) -> HTMLResponse:
         request,
         "_whatif_result.html",
         a=a,
-        view=_assessment_view(a),
+        view=views.assessment(a, cfg),
         original=original,
-        changes=_what_changed(original, a),
+        changes=views.what_changed(original, a),
     )
 
 
 @app.get("/patterns", response_class=HTMLResponse)
 def patterns(request: Request) -> HTMLResponse:
-    s = svc()
-    grid = {(r["history"], r["intensity"]): r for r in s.card["pattern_stats_dev"]}
-    abl = {
-        r["feature_set"]: r
-        for r in s.experiments.get("ablation", {}).get("random_split", [])
-        if r["model"] == "gradient_boosting" and r["feature_set"] != "full+duration"
-    }
-    abl_labels = {
-        "profile": "Profile only",
-        "profile+context": "Profile + campaign context",
-        "profile+interaction": "Profile + interaction history",
-        "full": "All three (deployed)",
-    }
-    abl_chart = charts.hbars(
-        [
-            (label, abl[k]["test"]["pr_auc"], f"{abl[k]['test']['pr_auc']:.3f}",
-             f"{label}: PR-AUC {abl[k]['test']['pr_auc']:.3f}, "
-             f"ROC-AUC {abl[k]['test']['roc_auc']:.3f}")
-            for k, label in abl_labels.items() if k in abl
-        ],
-        vmax=0.5,
-        label_w=210,
-    ) if abl else None  # fmt: skip
-    inter = s.experiments.get("interactions", {}).get("shap_interaction", {})
-    pairs = inter.get("top_pairs", [])[:7]
-    pair_chart = charts.hbars(
-        [(p["label"], p["mean_abs_interaction"], f"{p['mean_abs_interaction']:.3f}",
-          f"{p['label']}: {p['mean_abs_interaction']:.3f}") for p in pairs],
-        label_w=330,
-    ) if pairs else None  # fmt: skip
-    hyp = {
-        tuple(sorted(p["pair"])): p["mean_abs_interaction"]
-        for p in inter.get("hypothesised_pairs", [])
-    }
     return render(
         request,
         "patterns.html",
-        grid=grid,
         histories=HISTORY_ORDER,
         intensities=INTENSITY_ORDER,
-        exp=s.experiments,
-        importance=s.card["global_importance"],
-        abl_chart=abl_chart,
-        pair_chart=pair_chart,
-        hyp_campaign=hyp.get(("campaign", "poutcome"), 0.0),
-        base_rate=s.card["data"]["base_rate"],
+        **views.insights_page(svc()),
     )
 
 
 @app.get("/model", response_class=HTMLResponse)
 def model_page(request: Request) -> HTMLResponse:
-    s = svc()
-    card = s.card
-    curves = card["test_curves"]
-    rel = [[r["mean_predicted"], r["observed"]] for r in curves["reliability"]]
-    top = max(max(x, y) for x, y in rel)
-    rel_max = min(1.0, round(top + 0.05, 1))
-    importance = card["global_importance"]
-    imp_chart = charts.hbars(
-        [
-            (i["label"], i["mean_abs_log_odds"], f"{i['mean_abs_log_odds']:.2f}",
-             f"{i['label']}: mean |SHAP| {i['mean_abs_log_odds']:.3f} log-odds")
-            for i in importance
-        ],
-        css=["context" if i["is_context"] else "" for i in importance],
-        label_w=230,
-    )  # fmt: skip
-    return render(
-        request,
-        "model.html",
-        card=card,
-        exp=s.experiments,
-        roc=charts.xy({"model": curves["roc"]}),
-        pr=charts.xy({"model": curves["pr"]}, diagonal=False),
-        reliability=charts.xy({"model": rel}, xmax=rel_max, ymax=rel_max),
-        importance=importance,
-        imp_chart=imp_chart,
-    )
+    return render(request, "model.html", **views.model_page(svc()))
 
 
 @app.get("/policy", response_class=HTMLResponse)
 def policy_page(request: Request) -> HTMLResponse:
-    cfg = policy_from(request)
-    b = svc().policy_backtest(cfg)
-    return render(request, "policy.html", backtest=b, mix=_action_mix_chart(b))
+    b = svc().policy_backtest(policy_from(request))
+    return render(request, "policy.html", backtest=b, donut=views.action_donut(b))
 
 
 @app.post("/policy", response_class=HTMLResponse)
@@ -348,7 +273,12 @@ async def update_policy(request: Request) -> HTMLResponse:
         cfg, error = policy_from(request), "; ".join(err["msg"] for err in e.errors())
     b = svc().policy_backtest(cfg)
     resp = render(
-        request, "_backtest.html", policy=cfg, backtest=b, mix=_action_mix_chart(b), error=error
+        request,
+        "_backtest.html",
+        policy=cfg,
+        backtest=b,
+        donut=views.action_donut(b),
+        error=error,
     )
     fields = cfg.model_dump(exclude={"break_even", "priority_line"})
     resp.set_cookie(POLICY_COOKIE, urlencode(fields), samesite="lax", max_age=30 * 86400)
@@ -357,9 +287,14 @@ async def update_policy(request: Request) -> HTMLResponse:
     return resp
 
 
-@app.get("/method", response_class=HTMLResponse)
-def method(request: Request) -> HTMLResponse:
-    return render(request, "method.html", card=svc().card, exp=svc().experiments)
+@app.get("/about", response_class=HTMLResponse)
+def about(request: Request) -> HTMLResponse:
+    return render(request, "about.html", card=svc().card)
+
+
+@app.get("/method")
+def method_redirect() -> RedirectResponse:
+    return RedirectResponse("/about", status_code=301)
 
 
 # ---- JSON API: the integration surface a CRM would call -----------------------------
@@ -383,69 +318,3 @@ def _api_payload(a: Assessment) -> dict[str, Any]:
     out = a.model_dump(exclude={"actual_outcome"})
     out["summary"] = narrative.summary(a)
     return out
-
-
-# ---- view helpers --------------------------------------------------------------------
-
-
-def _assessment_view(a: Assessment) -> dict[str, Any]:
-    shown = a.explanation.contributions[:8]
-    rest = a.explanation.contributions[8:]
-    rows = [
-        (f"{c.label}: {c.value}", c.log_odds, f"×{c.odds_multiplier:.2f}",
-         f"{c.label} = {c.value}: odds ×{c.odds_multiplier:.2f} ({c.log_odds:+.2f} log-odds)")
-        for c in shown
-    ]  # fmt: skip
-    if rest:
-        total = sum(c.log_odds for c in rest)
-        rows.append(
-            (f"{len(rest)} other fields", total, f"×{2.718281828 ** total:.2f}",
-             "Combined effect of the remaining fields")
-        )  # fmt: skip
-    label, why = narrative.robustness(a)
-    return {
-        "waterfall": charts.diverging(rows),
-        "context_rows": {i for i, c in enumerate(shown) if c.is_context},
-        "summary": narrative.summary(a),
-        "drivers_up": [narrative.driver_sentence(c) for c in a.explanation.drivers_up[:4]],
-        "drivers_down": [narrative.driver_sentence(c) for c in a.explanation.drivers_down[:4]],
-        "robustness": label,
-        "robustness_why": why,
-        "next_step": ACTION_NEXT_STEP[a.decision.action],
-    }
-
-
-def _what_changed(before: Assessment, after: Assessment) -> dict[str, list[dict[str, Any]]]:
-    """Split SHAP shifts into fields the user edited and unchanged fields whose effect moved.
-
-    The second group is the model's interaction effects made visible: e.g. a recent
-    previous contact helps a lot after a past success, much less after a past failure.
-    """
-    b = {c.feature: c for c in before.explanation.contributions}
-    edited: list[dict[str, Any]] = []
-    shifted: list[dict[str, Any]] = []
-    for c in after.explanation.contributions:
-        old = b[c.feature]
-        d = c.log_odds - old.log_odds
-        row = {"label": c.label, "before": old.value, "after": c.value, "delta": d}
-        if getattr(before.lead, c.feature) != getattr(after.lead, c.feature):
-            edited.append(row)
-        elif abs(d) >= 0.1:
-            shifted.append(row)
-    return {
-        "edited": sorted(edited, key=lambda x: -abs(x["delta"])),
-        "shifted": sorted(shifted, key=lambda x: -abs(x["delta"]))[:4],
-    }
-
-
-def _action_mix_chart(backtest: dict[str, Any]) -> charts.Chart:
-    rows = backtest["rows"]
-    return charts.hbars(
-        [
-            (r["title"], r["share"], f"{r['share']:.0%}",
-             f"{r['title']}: {r['n']:,} leads · {(r['observed_rate'] or 0):.0%} actually converted")
-            for r in rows
-        ],
-        vmax=1.0,
-        css=[f"act-{r['action']}" for r in rows],
-    )  # fmt: skip

@@ -1,43 +1,38 @@
 {% extends "base.html" %}
-{% block title %}Decision policy · Lead Decision Intelligence{% endblock %}
+{% block title %}Strategy · Lead Decision Intelligence{% endblock %}
 {% block content %}
 <section class="page-head">
-  <h1>Decision policy</h1>
-  <p>The model only estimates a probability. <b>This page is where that estimate becomes an action</b>, using explicit,
-    editable business assumptions. Change them and every page (lead cards, rankings, overview) updates.</p>
+  <h1>Contact strategy simulator</h1>
+  <p>The model estimates each lead's likelihood to subscribe; the strategy turns that into an action using your business
+    assumptions. Move the sliders and every recommendation in the system updates.</p>
 </section>
 <div class="grid g-lead">
   <div class="stack">
     <div class="card">
-      <h2>Assumptions</h2>
+      <h2>Business assumptions</h2>
       <form id="policy-form" hx-post="/policy" hx-target="#backtest" hx-trigger="input delay:250ms" class="stack">
-        <label class="field">Cost of one follow-up contact (€) — <span class="num" id="o-cost">{{ policy.contact_cost | round(0) | int }}</span>
+        <label class="field">Cost of one follow-up contact (€) <span class="num slider-val" id="o-cost">{{ policy.contact_cost | round(0) | int }}</span>
           <input type="range" name="contact_cost" min="1" max="30" step="1" value="{{ policy.contact_cost }}" oninput="document.getElementById('o-cost').textContent=this.value"></label>
-        <label class="field">Net value of one subscription (€) — <span class="num" id="o-val">{{ policy.conversion_value | round(0) | int }}</span>
+        <label class="field">Value of one subscription (€) <span class="num slider-val" id="o-val">{{ policy.conversion_value | round(0) | int }}</span>
           <input type="range" name="conversion_value" min="10" max="300" step="5" value="{{ policy.conversion_value }}" oninput="document.getElementById('o-val').textContent=this.value"></label>
-        <label class="field">Priority threshold (estimate at which a lead jumps the queue) — <span class="num" id="o-pri">{{ (policy.priority_threshold * 100) | round(0) | int }}%</span>
+        <label class="field">Priority threshold <span class="num slider-val" id="o-pri">{{ (policy.priority_threshold * 100) | round(0) | int }}%</span>
           <input type="range" name="priority_threshold" min="0.15" max="0.8" step="0.05" value="{{ policy.priority_threshold }}" oninput="document.getElementById('o-pri').textContent=Math.round(this.value*100)+'%'"></label>
-        <label class="field">“Heavily contacted” after this many contacts in the campaign — <span class="num" id="o-heavy">{{ policy.heavy_contact }}</span>
+        <label class="field">Contacts before a lead counts as heavily contacted <span class="num slider-val" id="o-heavy">{{ policy.heavy_contact }}</span>
           <input type="range" name="heavy_contact" min="2" max="10" step="1" value="{{ policy.heavy_contact }}" oninput="document.getElementById('o-heavy').textContent=this.value"></label>
         <div><button class="btn secondary" type="submit" name="reset" value="1" hx-post="/policy" hx-target="#backtest">Reset to defaults</button>
           <noscript><button class="btn" type="submit">Apply</button></noscript></div>
       </form>
-      <p class="small muted">Defaults (€5 per contact, €50 per subscription) are <b>illustrative assumptions</b>, not real bank economics.
-        A real deployment would set them with the bank's finance and compliance teams.</p>
     </div>
     <div class="card">
-      <h2>The rules (first match wins)</h2>
-      <ol class="small" style="padding-left:18px;margin:0">
-        <li><b>Human review</b> if re-trained versions of the model disagree about which side of the follow-up line the lead is on.</li>
-        <li><b>Prioritise</b> if the estimate ≥ priority threshold.</li>
-        <li><b>Follow up, change approach</b> if above the follow-up line but already heavily contacted.</li>
-        <li><b>Follow up</b> if estimate ≥ follow-up line (break-even = cost ÷ value).</li>
-        <li><b>Stop repeated follow-up</b> if below the line and already heavily contacted.</li>
-        <li><b>Deprioritise</b> otherwise.</li>
+      <h2>How actions are decided</h2>
+      <ol class="steps">
+        <li><span class="dot act-review"></span><div><b>Human review</b> when the model's likely range crosses the follow-up line.</div></li>
+        <li><span class="dot act-prioritise"></span><div><b>Prioritise</b> when the likelihood is at or above the priority threshold.</div></li>
+        <li><span class="dot act-change_approach"></span><div><b>Change approach</b> when it is worth a call but the lead is already heavily contacted.</div></li>
+        <li><span class="dot act-follow_up"></span><div><b>Follow up</b> when likelihood × value exceeds the cost of a call.</div></li>
+        <li><span class="dot act-stop"></span><div><b>Stop repeated follow-up</b> when a call is not worth it and the lead is heavily contacted.</div></li>
+        <li><span class="dot act-deprioritise"></span><div><b>Deprioritise</b> otherwise.</div></li>
       </ol>
-      <p class="small text-2" style="margin-top:10px">Break-even follows expected value (Elkan, 2001): another call is worth it when
-        P(subscribe) × value &gt; cost. This works only because the model's probabilities are calibrated. The “heavily contacted” rule is a
-        <b>proxy for contact fatigue</b>: the data shows conversion falling with each extra contact, but has no direct fatigue label.</p>
     </div>
   </div>
   <div id="backtest" class="busy">{% include "_backtest.html" %}</div>

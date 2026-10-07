@@ -8,13 +8,11 @@
 {% macro hbar_chart(chart, title) -%}
 {% set label_w = chart.extras.label_w %}
 <svg class="chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="{{ title }}">
-  <title>{{ title }}</title>
   {% for b in chart.bars %}
-  <g class="mark">
-    <title>{{ b.tooltip }}</title>
+  <g class="mark" data-tip="{{ b.tooltip }}">
     <rect class="hit" x="0" y="{{ b.y - 6 }}" width="{{ chart.width }}" height="{{ b.h + 12 }}"></rect>
     <text x="{{ label_w - 10 }}" y="{{ b.y + b.h / 2 + 4 }}" text-anchor="end">{{ b.label | truncate((label_w / 6.4) | int, True, "…") }}</text>
-    <path class="bar {{ b.css }}" d="M{{ b.x }},{{ b.y }} h{{ [b.w - 4, 0] | max }} a4,4 0 0 1 4,4 v{{ b.h - 8 }} a4,4 0 0 1 -4,4 h-{{ [b.w - 4, 0] | max }} z"></path>
+    <rect class="bar h {{ b.css }}" x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="4" style="animation-delay: {{ loop.index0 * 50 }}ms"></rect>
     <text class="v" x="{{ b.x + b.w + 6 }}" y="{{ b.y + b.h / 2 + 4 }}">{{ b.text }}</text>
   </g>
   {% endfor %}
@@ -22,17 +20,52 @@
 </svg>
 {%- endmacro %}
 
-{# Diverging SHAP chart: right = raises odds (blue), left = lowers odds (red). #}
-{% macro waterfall(chart, title, context_rows=()) -%}
-<svg class="chart" viewBox="0 0 {{ chart.width }} {{ chart.height + 18 }}" role="img" aria-label="{{ title }}">
-  <title>{{ title }}</title>
-  <text x="{{ chart.extras.centre - 8 }}" y="{{ chart.height + 14 }}" text-anchor="end" font-size="11">◀ lowers odds</text>
-  <text x="{{ chart.extras.centre + 8 }}" y="{{ chart.height + 14 }}" font-size="11">raises odds ▶</text>
+{# Vertical columns. #}
+{% macro column_chart(chart, title) -%}
+<svg class="chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="{{ title }}">
+  <line class="axis" x1="0" x2="{{ chart.width }}" y1="{{ chart.extras.base }}" y2="{{ chart.extras.base }}"></line>
   {% for b in chart.bars %}
-  <g class="mark">
-    <title>{{ b.tooltip }}</title>
+  <g class="mark" data-tip="{{ b.tooltip }}">
+    <rect class="hit" x="{{ b.x - 8 }}" y="0" width="{{ b.w + 16 }}" height="{{ chart.height }}"></rect>
+    <rect class="bar v {{ b.css }}" x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="4" style="animation-delay: {{ loop.index0 * 50 }}ms"></rect>
+    <text class="v" x="{{ b.x + b.w / 2 }}" y="{{ b.y - 6 }}" text-anchor="middle">{{ b.text }}</text>
+    <text x="{{ b.x + b.w / 2 }}" y="{{ chart.extras.base + 16 }}" text-anchor="middle" font-size="11">{{ b.label | truncate(24, True, "…") }}</text>
+  </g>
+  {% endfor %}
+</svg>
+{%- endmacro %}
+
+{# Donut with centre figure and a legend beside it. #}
+{% macro donut_chart(chart, centre_value, centre_label, title) -%}
+{% set c = chart.extras.c %}
+<div class="donut-wrap">
+  <svg class="chart donut" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="{{ title }}">
+    <circle cx="{{ c }}" cy="{{ c }}" r="{{ chart.extras.r }}" class="donut-track" stroke-width="{{ chart.extras.ring }}" fill="none"></circle>
+    {% for b in chart.bars %}
+    <circle class="seg {{ b.css }}" data-tip="{{ b.tooltip }}" cx="{{ c }}" cy="{{ c }}" r="{{ chart.extras.r }}" fill="none"
+      stroke-width="{{ chart.extras.ring }}" stroke-dasharray="{{ b.w }} {{ b.h }}" stroke-dashoffset="{{ b.x }}"
+      transform="rotate(-90 {{ c }} {{ c }})"></circle>
+    {% endfor %}
+    <text x="{{ c }}" y="{{ c - 2 }}" text-anchor="middle" class="donut-value">{{ centre_value }}</text>
+    <text x="{{ c }}" y="{{ c + 18 }}" text-anchor="middle" font-size="12">{{ centre_label }}</text>
+  </svg>
+  <ul class="legend">
+    {% for b in chart.bars %}
+    <li data-tip="{{ b.tooltip }}"><span class="dot {{ b.css }}" aria-hidden="true"></span><span>{{ b.label }}</span><b class="num">{{ b.text }}</b></li>
+    {% endfor %}
+  </ul>
+</div>
+{%- endmacro %}
+
+{# Diverging SHAP chart: right = raises likelihood (blue), left = lowers it (red). #}
+{% macro waterfall(chart, title) -%}
+<svg class="chart" viewBox="0 0 {{ chart.width }} {{ chart.height + 18 }}" role="img" aria-label="{{ title }}">
+  <text x="{{ chart.extras.centre - 8 }}" y="{{ chart.height + 14 }}" text-anchor="end" font-size="11">◀ lowers likelihood</text>
+  <text x="{{ chart.extras.centre + 8 }}" y="{{ chart.height + 14 }}" font-size="11">raises likelihood ▶</text>
+  {% for b in chart.bars %}
+  <g class="mark" data-tip="{{ b.tooltip }}">
     <rect class="hit" x="0" y="{{ b.y - 4 }}" width="{{ chart.width }}" height="{{ b.h + 8 }}"></rect>
-    <text x="6" y="{{ b.y + b.h / 2 + 4 }}">{{ b.label | truncate(36, True, '…') }}{% if loop.index0 in context_rows %} ⚑{% endif %}</text>
+    <text x="6" y="{{ b.y + b.h / 2 + 4 }}">{{ b.label | truncate(36, True, '…') }}</text>
     <rect class="bar {{ b.css }}" x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="3"></rect>
     {% if b.value >= 0 %}
     <text class="v" x="{{ b.x + b.w + 5 }}" y="{{ b.y + b.h / 2 + 4 }}">{{ b.text }}</text>
@@ -45,34 +78,49 @@
 </svg>
 {%- endmacro %}
 
-{# Line chart in a unit square (ROC / PR / reliability). #}
-{% macro xy_chart(chart, title, xlabel, ylabel, show_points=False) -%}
+{# Line chart in a unit square (ROC / gains / calibration), optional area fill and marker. #}
+{% macro xy_chart(chart, title, xlabel, ylabel, show_points=False, area=False, pct_axes=False) -%}
 {% set pad = chart.extras.pad %}
 <svg class="chart" viewBox="0 0 {{ chart.width }} {{ chart.height + 16 }}" role="img" aria-label="{{ title }}">
-  <title>{{ title }}</title>
   {% for t in chart.ticks %}
   <line class="grid" x1="{{ pad }}" x2="{{ pad + chart.extras.pw }}" y1="{{ t.y }}" y2="{{ t.y }}"></line>
-  <text x="{{ pad - 6 }}" y="{{ t.y + 4 }}" text-anchor="end" font-size="11">{{ t.ylabel }}</text>
-  <text x="{{ t.x }}" y="{{ 12 + chart.extras.ph + 16 }}" text-anchor="middle" font-size="11">{{ t.label }}</text>
+  <text x="{{ pad - 6 }}" y="{{ t.y + 4 }}" text-anchor="end" font-size="11">{% if pct_axes %}{{ (t.ylabel | float * 100) | round | int }}%{% else %}{{ t.ylabel }}{% endif %}</text>
+  <text x="{{ t.x }}" y="{{ 12 + chart.extras.ph + 16 }}" text-anchor="middle" font-size="11">{% if pct_axes %}{{ (t.label | float * 100) | round | int }}%{% else %}{{ t.label }}{% endif %}</text>
   {% endfor %}
   {% if chart.extras.diagonal %}<path class="diag" d="{{ chart.extras.diagonal }}"></path>{% endif %}
   {% for line in chart.lines %}
-  <path class="line" d="{{ line.d }}"></path>
-  {% if show_points %}{% for p in line.points %}<g class="mark"><title>{{ p.tip }}</title><circle class="pt" cx="{{ p.x }}" cy="{{ p.y }}" r="5"></circle></g>{% endfor %}{% endif %}
+  {% if area %}<path class="area" d="{{ line.d }} L{{ pad + chart.extras.pw }},{{ 12 + chart.extras.ph }} L{{ pad }},{{ 12 + chart.extras.ph }} Z"></path>{% endif %}
+  <path class="line draw" d="{{ line.d }}" pathLength="1"></path>
+  {% if show_points %}{% for p in line.points %}<circle class="pt" data-tip="{{ p.tip }}" cx="{{ p.x }}" cy="{{ p.y }}" r="5"></circle>{% endfor %}{% endif %}
   {% endfor %}
+  {% if chart.extras.marker %}{% set m = chart.extras.marker %}
+  <line class="guide" x1="{{ m.x }}" x2="{{ m.x }}" y1="{{ m.y }}" y2="{{ 12 + chart.extras.ph }}"></line>
+  <circle class="pt big" cx="{{ m.x }}" cy="{{ m.y }}" r="7" data-tip="{{ m.label }}"></circle>
+  <text class="v" x="{{ m.x + 10 }}" y="{{ m.y + 20 }}" font-size="12">{{ m.label }}</text>
+  {% endif %}
   <text x="{{ pad + chart.extras.pw / 2 }}" y="{{ chart.height + 14 }}" text-anchor="middle" font-size="11">{{ xlabel }}</text>
   <text x="10" y="{{ 12 + chart.extras.ph / 2 }}" text-anchor="middle" font-size="11" transform="rotate(-90 10 {{ 12 + chart.extras.ph / 2 }})">{{ ylabel }}</text>
 </svg>
 {%- endmacro %}
 
-{# Probability with its uncertainty band and the policy lines. #}
-{% macro range_bar(p, lo, hi, policy, scale=1.0) -%}
-{% set s = 100 / scale %}
-<div class="range-bar" role="img" aria-label="Estimate {{ pct(p) }}, likely range {{ pct(lo) }} to {{ pct(hi) }}">
-  <div class="band" style="left: {{ [lo * s, 100] | min }}%; width: {{ [[(hi - lo) * s, 1] | max, 100] | min }}%"></div>
-  <div class="th" style="left: {{ [policy.break_even * s, 100] | min }}%" title="Follow-up line {{ pct(policy.break_even) }}"></div>
-  <div class="th" style="left: {{ [policy.priority_line * s, 100] | min }}%" title="Priority line {{ pct(policy.priority_line) }}"></div>
-  <div class="pt" style="left: {{ [p * s, 100] | min }}%"></div>
-</div>
-<div class="range-legend"><span>0%</span><span>┊ follow-up {{ pct(policy.break_even) }} · ┊ priority {{ pct(policy.priority_line) }}</span><span>{{ pct(scale) }}</span></div>
+{# Half-ring gauge for one lead's probability. #}
+{% macro gauge_chart(g, p, label) -%}
+<svg class="chart gauge" viewBox="0 0 {{ g.width }} {{ g.height + 4 }}" role="img" aria-label="{{ label }}">
+  <path d="{{ g.d }}" class="gauge-track" fill="none" stroke-width="22" stroke-linecap="round"></path>
+  <path d="{{ g.d }}" class="gauge-fill" fill="none" stroke-width="22" stroke-linecap="round"
+    stroke-dasharray="{{ g.fill }} {{ g.len }}" style="--len: {{ g.len }}"></path>
+  {% for t in g.ticks %}
+  <line class="gauge-tick" x1="{{ t.x1 }}" y1="{{ t.y1 }}" x2="{{ t.x2 }}" y2="{{ t.y2 }}" data-tip="{{ t.label }} threshold"></line>
+  {% endfor %}
+  <text x="{{ g.cx }}" y="{{ g.cy - 14 }}" text-anchor="middle" class="gauge-value">{{ pct(p) }}</text>
+  <text x="{{ g.cx }}" y="{{ g.cy + 4 }}" text-anchor="middle" font-size="12">likelihood to subscribe</text>
+</svg>
+{%- endmacro %}
+
+{% macro icon(name) -%}
+{% if name == "users" %}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 9a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm-12 11a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+{% elif name == "phone" %}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+{% elif name == "target" %}<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
+{% elif name == "chart" %}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10m6 10V4m6 16v-7m4 7H2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+{% endif %}
 {%- endmacro %}
