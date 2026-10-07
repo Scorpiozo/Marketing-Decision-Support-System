@@ -244,10 +244,15 @@ to measure whether the recommendations help.
 
 ## 5-minute live demo script
 
-1. **Overview** (30 s): read the headline, the 5-step pipeline, "33% of calls → 74% of subscriptions".
-2. **Leads** → filter "Stop repeated follow-up", then open a top "Prioritise" lead, e.g. `L43013` (1 min).
-3. On the lead page: action, 88% with range, "stable", the SHAP waterfall, the context-flag caveat, the interaction pattern (1 min).
-4. **What-if**: set previous outcome to *failure* and contacts to 8 → recommendation changes to "Follow up — change approach" at 12%; point out the "interaction effects" table (1 min).
-5. **Decision policy**: raise call cost to €15 → contacts drop from 33% to 12%; explain break-even (45 s).
-6. **Model & XAI**: comparison table, calibration chart, CNN shuffle test, ablation (45 s).
-7. **Method & limits**: name the three biggest limitations (15 s).
+Live site: https://web-production-4cf5b6.up.railway.app
+
+1. **Dashboard** (45 s): the headline, KPI tiles, the action donut, and the gains curve: "contacting 33% of leads reaches 74% of subscribers".
+2. **Leads** → click the "Prioritise follow-up" chip, open `L43013` (30 s).
+3. **Lead page**: the 88% gauge, decision card (range, confidence, value of next contact), the SHAP waterfall, the interaction profile (1 min).
+4. **What-if**: set previous outcome to *failure* and contacts to 8 → 12%, "Follow up — change approach"; point out the "linked effects" table, which shows feature interactions (1 min).
+5. **Strategy**: raise call cost to €15 → contacts drop from 33% to 12%; explain break-even = cost ÷ value (45 s).
+6. **Model**: six-model comparison (gradient boosting best, 1D CNN included), ROC, predicted-vs-actual, global SHAP (45 s).
+7. **Insights / About** if asked: heat map, signal lift (+18%), workflow (15 s).
+
+The website shows the product; the deeper method, leakage audit and limitations are in
+`docs/` (be ready to discuss them: see the "10 difficult examiner questions" above).

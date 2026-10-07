@@ -89,3 +89,16 @@ band (it is the conventional IQR), and the docs now state the modest effect and 
 the earlier look.
 Also: a priority threshold set below break-even let below-break-even leads be
 "prioritised". `PolicyConfig.priority_line = max(priority, break_even)` + regression test.
+
+## 2026-10-08 01:30 — Client-ready UI pass and live deployment
+Requested: a clean, impressive, product-style site with no "prototype/academic" framing.
+Done as a presentation change only: no metric altered, no new claims. Research caveats
+(leakage, drift, era proxies, CNN shuffle test) moved out of the UI into docs/, where they
+remain unchanged; UCI attribution stays in the footer (CC BY 4.0 requires it).
+Added dashboard donut + gains curve, lead gauge, insight charts, model chart, tooltips
+and motion (reduced-motion respected). Found on the live site: phone-width overflow
+caused by `1fr` grid tracks growing to their widest chart -> `minmax(0, 1fr)`; verified
+document width 386 px <= 390 on all 7 pages without overflow clipping.
+Railway: trial on the first account had expired; deployed on a new account, project
+`lead-decision-intelligence`, service `web`. A stale project-scoped RAILWAY_TOKEN in the
+session env had to be stripped (`env -u RAILWAY_TOKEN`) for the CLI to use the login.

@@ -110,8 +110,10 @@ footer.site { max-width: 1240px; margin: 0 auto; padding: 0 20px 40px; color: va
 .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .g-lead { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); align-items: start; }
 .stack > * + * { margin-top: 16px; }
-@media (max-width: 960px) { .g3, .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .g-lead, .g2 { grid-template-columns: 1fr; } }
-@media (max-width: 560px) { .g3, .g4 { grid-template-columns: 1fr; } main { padding: 20px 16px 48px; } .top-inner { padding: 0 16px; } }
+/* minmax(0, 1fr), not 1fr: a plain 1fr track grows to its widest child (a chart or a
+   table) and pushes the page past the viewport on phones. */
+@media (max-width: 960px) { .g3, .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .g-lead, .g2 { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 560px) { .g3, .g4 { grid-template-columns: minmax(0, 1fr); } main { padding: 20px 16px 48px; } .top-inner { padding: 0 16px; } .hero h1 { font-size: 1.65rem; } }
 
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); min-width: 0; }
 .card > h2:first-child, .card > h3:first-child { margin-top: 0; }
@@ -251,7 +253,7 @@ details[open] > summary { margin-bottom: 8px; }
 .pipeline.compact .step { flex: none; position: relative; padding-left: 34px; }
 .pipeline.compact .step::before { content: counter(step); counter-increment: step; position: absolute; left: 10px; top: 11px; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: center; }
 .pipeline.compact { counter-reset: step; }
-@media (max-width: 960px) { .hero { grid-template-columns: 1fr; } }
+@media (max-width: 960px) { .hero { grid-template-columns: minmax(0, 1fr); } }
 
 .stat { position: relative; overflow: hidden; }
 .stat-icon { position: absolute; right: 14px; top: 14px; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;
@@ -271,7 +273,7 @@ svg.donut .donut-value { font-size: 28px; font-weight: 700; fill: var(--text); }
 .legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: .88rem; }
 .legend li { display: grid; grid-template-columns: 12px 1fr auto; gap: 8px; align-items: center; padding: 4px 6px; border-radius: 6px; }
 .legend li:hover { background: var(--surface-2); }
-@media (max-width: 560px) { .donut-wrap { grid-template-columns: 1fr; justify-items: center; } .legend { width: 100%; } }
+@media (max-width: 560px) { .donut-wrap { grid-template-columns: minmax(0, 1fr); justify-items: center; } .donut-wrap svg { max-width: 220px; } .legend { width: 100%; } }
 
 svg.chart path.area { fill: color-mix(in srgb, var(--accent) 12%, transparent); stroke: none; }
 svg.chart .guide { stroke: var(--text-2); stroke-width: 1; stroke-dasharray: 3 3; }
@@ -281,7 +283,7 @@ svg.chart [data-tip], .legend [data-tip] { cursor: default; }
 
 /* gauge */
 .decision-grid { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 16px; align-items: center; }
-@media (max-width: 560px) { .decision-grid { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .decision-grid { grid-template-columns: minmax(0, 1fr); } .gauge-box { max-width: 260px; } }
 svg.gauge .gauge-track { stroke: var(--surface-2); }
 svg.gauge .gauge-fill { stroke: var(--accent); animation: gauge 1s ease-out both; }
 .act-stop svg.gauge .gauge-fill, .act-deprioritise svg.gauge .gauge-fill { stroke: var(--act-deprioritise); }
@@ -319,6 +321,7 @@ svg.gauge .gauge-value { font-size: 34px; font-weight: 750; fill: var(--text); l
 .flow-step p { font-size: .82rem; color: var(--text-2); margin: 0; }
 .flow-n { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; display: inline-grid; place-items: center; }
 @media (max-width: 960px) { .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .flow { grid-template-columns: minmax(0, 1fr); } .cm { font-size: .78rem; } }
 .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; font-size: .88rem; }
 .steps li { display: grid; grid-template-columns: 12px 1fr; gap: 10px; align-items: baseline; }
 .slider-val { float: right; color: var(--text); font-weight: 700; }

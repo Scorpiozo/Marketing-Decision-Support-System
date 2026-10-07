@@ -4,7 +4,7 @@
 sales team which leads deserve another call, which need a different approach, and which
 should be left alone — and shows the evidence behind every recommendation.**
 
-**Live demo:** _pending deployment_
+**Live demo:** [https://web-production-4cf5b6.up.railway.app](https://web-production-4cf5b6.up.railway.app)
 
 | | |
 |---|---|
@@ -55,13 +55,13 @@ here means contact history, not conversation — see [LIMITATIONS](docs/LIMITATI
 
 | Page | Answers |
 |---|---|
-| Overview | What is this, how is a recommendation produced, how does the policy perform? |
-| Leads | Ranked held-out leads with estimate, likely range and recommended action; filters |
-| Lead intelligence | Decision card, confidence, SHAP evidence, interaction pattern, caveats, **what-if simulator** |
-| Interaction patterns | Observed conversion by history × contact intensity; ablation; interaction effects |
-| Model & XAI | Model comparison, ROC/PR/calibration, global SHAP, ablation, CNN study, error analysis |
-| Decision policy | Editable cost assumptions; live back-test of the resulting segmentation |
-| Method & limits | Research method, data, architecture, limitations, production requirements |
+| Dashboard | KPIs, recommended-action mix, targeting-power (gains) curve, conversion by history, top leads |
+| Leads | All scored leads ranked by likelihood, with action filters and search |
+| Lead page | Likelihood gauge, decision card (range, confidence, value), SHAP explanation, interaction profile, **what-if simulator** |
+| Insights | History × contact-intensity heat map, signal-group lift, conversion by contacts / history / age, per-value SHAP effects |
+| Model | Six-model comparison (incl. 1D CNN), ROC, predicted-vs-actual, confusion matrix, global SHAP |
+| Strategy | Editable business assumptions with live action mix and outcomes |
+| About | Workflow, data, model, technology and integration API |
 
 Recommended actions: **Prioritise · Follow up · Follow up — change approach · Human review ·
 Deprioritise · Stop repeated follow-up.**

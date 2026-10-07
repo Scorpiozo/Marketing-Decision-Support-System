@@ -2,7 +2,9 @@
 
 ## Status
 
-Status: not yet deployed (awaiting Railway login) — updated after deploy.
+Status: **deployed** on Railway, project `lead-decision-intelligence`, service `web`, environment
+`production`: https://web-production-4cf5b6.up.railway.app (public, no password, per-IP rate limit on live scoring). Verified 2026-10-08
+with a live smoke test (all pages, lead pages, what-if, strategy, API, errors, assets, latency).
 
 ## Local
 
@@ -35,17 +37,23 @@ remaining weight is the scientific stack (scipy, pandas, scikit-learn) plus numb
 SHAP needs at runtime (~200 MB). Container check: `/healthz` OK, all pages 200, JSON API OK,
 runs as non-root user `app`, honours an injected `PORT`, model + portfolio load in 0.54 s.
 
-## Railway (CLI)
+## Railway (CLI): the procedure actually used
 
 ```bash
-railway login                       # interactive, once
-railway init                        # create a project (or `railway link` to an existing one)
-railway variables --set "APP_PASSWORD=..." --set "SESSION_SECRET=..."
-railway up                          # builds the Dockerfile and deploys
-railway domain                      # generate a public URL
-railway logs                        # first stop when anything breaks
-railway status
+unset RAILWAY_TOKEN                          # a stale token overrides `railway login`
+railway logout && railway login              # interactive, in the browser
+git switch redesign && git status            # deploy a clean working tree
+railway init --name lead-decision-intelligence
+railway add --service web                    # empty service for the app
+railway variables --set "PORT=8000" --service web
+railway up --service web                     # uploads the repo, builds the Dockerfile
+railway domain --service web                 # public URL (target port 8000)
+curl https://<domain>/healthz                # {"status":"ok","model_loaded":true}
 ```
+
+Redeploying a change: commit, then `railway up --service web --ci` (streams the build and
+exits when the deploy finishes). `railway logs --service web` is the first stop when
+anything breaks. To require a login, also set `APP_PASSWORD` and a random `SESSION_SECRET`.
 
 * Railway detects the root `Dockerfile` automatically.
 * Railway injects `PORT`. The Dockerfile `CMD` uses **shell form**
