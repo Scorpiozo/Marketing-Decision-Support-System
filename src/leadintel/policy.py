@@ -98,6 +98,13 @@ class PolicyConfig(BaseModel):
     def break_even(self) -> float:
         return min(0.99, self.contact_cost / self.conversion_value)
 
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def priority_line(self) -> float:
+        # Priority can never sit below break-even: a lead not worth one call cannot jump
+        # the queue, whatever threshold the user picks.
+        return max(self.priority_threshold, self.break_even)
+
 
 class Decision(BaseModel):
     action: Action
@@ -125,11 +132,10 @@ def decide(
             f"Model estimate {p:.0%}, but re-trained variants of the model range from "
             f"{lo:.0%} to {hi:.0%}, which spans the {be:.0%} break-even line."
         )
-    elif p >= config.priority_threshold:
+    elif p >= config.priority_line:
         action = Action.PRIORITISE
         reasons.append(
-            f"Estimate {p:.0%} is at or above the "
-            f"{config.priority_threshold:.0%} priority threshold."
+            f"Estimate {p:.0%} is at or above the {config.priority_line:.0%} priority threshold."
         )
     elif p >= be:
         action = Action.CHANGE_APPROACH if heavy else Action.FOLLOW_UP
@@ -170,7 +176,7 @@ def decide_many(
     return np.select(
         [
             (low < be) & (be <= high),
-            probability >= config.priority_threshold,
+            probability >= config.priority_line,
             (probability >= be) & heavy,
             probability >= be,
             heavy,

@@ -78,3 +78,14 @@ interaction *magnitude* only. Checked direction: true for <=200 days (SHAP lift 
 vs 0.40-0.68), but >400-day leads get a big lift regardless — a drift artifact. Copy now
 says exactly that. (2) Quantile bins labelled "0-2 contacts" and "1-37 previous" were
 wrong; count features now use explicit bins and others show real min-max per bin.
+
+## 2026-10-07 23:40 — Removed a test-set influence on the review band; fixed a policy edge case
+A doc reviewer pointed out that the 25-75 % review band had been chosen by looking at
+the held-out test set. Added `experiments/review_band.py`: re-split dev 75/25, fit model
++ bootstrap on 75 %, compare bands on 25 %. Result: 25-75 % flags 12.8 % with Brier
+0.086 inside vs 0.081 outside, so the same band passes both pre-stated criteria, but the
+flag is less informative than the test-set look suggested (0.093 vs 0.079). Kept the
+band (it is the conventional IQR), and the docs now state the modest effect and disclose
+the earlier look.
+Also: a priority threshold set below break-even let below-break-even leads be
+"prioritised". `PolicyConfig.priority_line = max(priority, break_even)` + regression test.

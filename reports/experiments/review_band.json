@@ -1,0 +1,46 @@
+{
+  "split": "dev 75/25 (test set untouched)",
+  "break_even": 0.1,
+  "bands": [
+    {
+      "band": [
+        0.1,
+        0.9
+      ],
+      "review_share": 0.2334,
+      "observed_rate_in_review": 0.0967,
+      "brier_in_review": 0.0866,
+      "brier_outside": 0.0803
+    },
+    {
+      "band": [
+        0.2,
+        0.8
+      ],
+      "review_share": 0.157,
+      "observed_rate_in_review": 0.0908,
+      "brier_in_review": 0.0828,
+      "brier_outside": 0.0816
+    },
+    {
+      "band": [
+        0.25,
+        0.75
+      ],
+      "review_share": 0.1284,
+      "observed_rate_in_review": 0.0947,
+      "brier_in_review": 0.0855,
+      "brier_outside": 0.0812
+    },
+    {
+      "band": [
+        0.3,
+        0.7
+      ],
+      "review_share": 0.1015,
+      "observed_rate_in_review": 0.0948,
+      "brier_in_review": 0.0857,
+      "brier_outside": 0.0813
+    }
+  ]
+}

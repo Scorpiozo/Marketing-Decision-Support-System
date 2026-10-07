@@ -164,3 +164,14 @@ def test_password_gate(monkeypatch: pytest.MonkeyPatch, client: TestClient) -> N
 def test_euro_formatting_handles_negatives() -> None:
     assert web._eur(-82745.0) == "−€82,745"
     assert web._eur(24105.4) == "€24,105"
+
+
+def test_live_scoring_is_rate_limited(
+    monkeypatch: pytest.MonkeyPatch, client: TestClient, lead_id: str
+) -> None:
+    monkeypatch.setattr(web, "RATE_LIMIT", 3)
+    web._hits.clear()
+    body = web.svc().lead(lead_id).model_dump()
+    codes = [client.post("/api/v1/assess", json=body).status_code for _ in range(5)]
+    assert codes[:3] == [200, 200, 200] and codes[3:] == [429, 429]
+    web._hits.clear()

@@ -49,3 +49,15 @@ def test_vectorised_policy_matches_scalar() -> None:
 def test_invalid_config_rejected() -> None:
     with pytest.raises(ValidationError):
         PolicyConfig(contact_cost=-1)
+
+
+def test_priority_never_below_break_even() -> None:
+    # Regression: priority threshold (25 %) set below break-even (30 %) used to let
+    # leads that are not worth one call jump the queue.
+    cfg = PolicyConfig(contact_cost=15, conversion_value=50, priority_threshold=0.25)
+    assert cfg.priority_line == pytest.approx(0.30)
+    assert decide(0.27, (0.265, 0.275), 1, cfg).action == Action.DEPRIORITISE
+    assert (
+        decide_many(np.array([0.27]), np.array([0.265]), np.array([0.275]), np.array([1]), cfg)[0]
+        == "deprioritise"
+    )

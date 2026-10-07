@@ -71,8 +71,8 @@
 <div class="range-bar" role="img" aria-label="Estimate {{ pct(p) }}, likely range {{ pct(lo) }} to {{ pct(hi) }}">
   <div class="band" style="left: {{ [lo * s, 100] | min }}%; width: {{ [[(hi - lo) * s, 1] | max, 100] | min }}%"></div>
   <div class="th" style="left: {{ [policy.break_even * s, 100] | min }}%" title="Follow-up line {{ pct(policy.break_even) }}"></div>
-  <div class="th" style="left: {{ [policy.priority_threshold * s, 100] | min }}%" title="Priority line {{ pct(policy.priority_threshold) }}"></div>
+  <div class="th" style="left: {{ [policy.priority_line * s, 100] | min }}%" title="Priority line {{ pct(policy.priority_line) }}"></div>
   <div class="pt" style="left: {{ [p * s, 100] | min }}%"></div>
 </div>
-<div class="range-legend"><span>0%</span><span>┊ follow-up {{ pct(policy.break_even) }} · ┊ priority {{ pct(policy.priority_threshold) }}</span><span>{{ pct(scale) }}</span></div>
+<div class="range-legend"><span>0%</span><span>┊ follow-up {{ pct(policy.break_even) }} · ┊ priority {{ pct(policy.priority_line) }}</span><span>{{ pct(scale) }}</span></div>
 {%- endmacro %}

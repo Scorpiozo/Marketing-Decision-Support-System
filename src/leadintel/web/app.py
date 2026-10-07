@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import time
+from collections import defaultdict, deque
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -42,6 +43,11 @@ state: dict[str, ScoringService] = {}
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     t0 = time.perf_counter()
+    if (
+        settings.app_password
+        and settings.session_secret == Settings.model_fields["session_secret"].default
+    ):
+        logger.warning("APP_PASSWORD is set but SESSION_SECRET is the default; set a random value.")
     state["svc"] = ScoringService(settings.artifacts_dir)
     logger.info(f"Model and portfolio loaded in {time.perf_counter() - t0:.2f}s")
     yield
@@ -97,6 +103,28 @@ async def password_gate(
         if request.url.path.startswith("/api"):
             return JSONResponse({"detail": "Not authenticated"}, status_code=401)
         return RedirectResponse(f"/login?next={request.url.path}", status_code=303)
+    return await call_next(request)
+
+
+# ---- rate limit for endpoints that run the model live ---------------------------------
+# The public demo has no login, so cap live scoring per client IP to stop a bot from
+# burning hosting credit. In-memory sliding window: fine for a single-process demo.
+RATE_LIMIT = 120  # live scoring requests per IP per minute (a human uses a handful)
+_hits: dict[str, deque[float]] = defaultdict(deque)
+
+
+@app.middleware("http")
+async def rate_limit(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
+    if request.method == "POST" and request.url.path != "/login":
+        ip = request.client.host if request.client else "unknown"
+        now, window = time.monotonic(), _hits[ip]
+        while window and now - window[0] > 60:
+            window.popleft()
+        if len(window) >= RATE_LIMIT:
+            return JSONResponse({"detail": "Too many requests; try again in a minute."}, 429)
+        window.append(now)
     return await call_next(request)
 
 
@@ -322,7 +350,7 @@ async def update_policy(request: Request) -> HTMLResponse:
     resp = render(
         request, "_backtest.html", policy=cfg, backtest=b, mix=_action_mix_chart(b), error=error
     )
-    fields = cfg.model_dump(exclude={"break_even"})
+    fields = cfg.model_dump(exclude={"break_even", "priority_line"})
     resp.set_cookie(POLICY_COOKIE, urlencode(fields), samesite="lax", max_age=30 * 86400)
     if "reset" in form:
         resp.headers["HX-Refresh"] = "true"

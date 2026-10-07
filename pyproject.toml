@@ -5,16 +5,18 @@ description = "Interpretable interaction-pattern-based lead decision intelligenc
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "fastapi[standard]",
+    "fastapi",
     "jinja2",
     "loguru",
     "numpy",
     "pandas",
     "pydantic",
     "pydantic-settings",
+    "python-multipart",
     "scikit-learn",
     "shap",
     "threadpoolctl",
+    "uvicorn[standard]",
 ]
 
 [dependency-groups]

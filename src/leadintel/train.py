@@ -38,8 +38,8 @@ from leadintel.patterns import HISTORY_ORDER, INTENSITY_ORDER, history_label, in
 from leadintel.policy import PolicyConfig
 from leadintel.uncertainty import centered_interval
 
-# Middle half of the bootstrap models: flags ~10 % of leads, and those leads really are
-# harder (test Brier 0.093 inside the flag vs 0.079 outside). The 10-90 band flagged 21 %.
+# Middle half of the bootstrap models. Chosen on a validation split carved from the dev
+# data (experiments/review_band.py), never on the test set: see that report.
 INTERVAL_QUANTILES = (0.25, 0.75)
 
 
@@ -56,11 +56,15 @@ def fit_bootstrap(pipeline: Pipeline, X: pd.DataFrame, y: pd.Series) -> list[Any
 
 
 def bootstrap_interval(
-    pipeline: Pipeline, members: list[Any], X: pd.DataFrame, p: np.ndarray
+    pipeline: Pipeline,
+    members: list[Any],
+    X: pd.DataFrame,
+    p: np.ndarray,
+    quantiles: tuple[float, float] = INTERVAL_QUANTILES,
 ) -> tuple[np.ndarray, np.ndarray]:
     encoded = pipeline.named_steps["prep"].transform(X)
     preds = np.stack([m.predict_proba(encoded)[:, 1] for m in members])
-    return centered_interval(p, preds, INTERVAL_QUANTILES)
+    return centered_interval(p, preds, quantiles)
 
 
 def pattern_stats(dev: pd.DataFrame) -> list[dict[str, Any]]:
