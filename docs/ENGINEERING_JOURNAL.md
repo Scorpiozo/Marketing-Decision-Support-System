@@ -102,3 +102,11 @@ document width 386 px <= 390 on all 7 pages without overflow clipping.
 Railway: trial on the first account had expired; deployed on a new account, project
 `lead-decision-intelligence`, service `web`. A stale project-scoped RAILWAY_TOKEN in the
 session env had to be stripped (`env -u RAILWAY_TOKEN`) for the CLI to use the login.
+
+## 2026-10-08 07:15 — Final handoff guide (documentation-only phase)
+Wrote docs/LEAD_INTELLIGENCE_FINAL_HANDOFF_GUIDE.md (+ .docx generated from it with
+docx-js, schema-validated). Every number was re-verified against artifacts, experiment
+reports, the 59-test suite, a fresh benchmark and the live site. Verification surfaced
+documentation/tooling drift, fixed without touching the app: the benchmark still hit
+/method and exceeded the new rate limit (so it had been silently failing), test counts
+said 56, and some docs used pre-redesign page names.

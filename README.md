@@ -232,5 +232,6 @@ audit, experiments and decisions are traced in [ENGINEERING_JOURNAL](docs/ENGINE
 | [TESTING](docs/TESTING.md) | Test inventory, accessibility, usability review |
 | [DEPLOYMENT](docs/DEPLOYMENT.md) | Docker, Railway, environment, security checklist |
 | [LIMITATIONS](docs/LIMITATIONS.md) | What this prototype cannot claim |
+| [LEAD_INTELLIGENCE_FINAL_HANDOFF_GUIDE](docs/LEAD_INTELLIGENCE_FINAL_HANDOFF_GUIDE.md) ([.docx](docs/LEAD_INTELLIGENCE_FINAL_HANDOFF_GUIDE.docx)) | **Start here:** complete handoff, user guide, architecture, deployment and viva kit |
 | [FACULTY_VIVA_GUIDE](docs/FACULTY_VIVA_GUIDE.md) | Plain-language explanation and examiner Q&A |
 | [ENGINEERING_JOURNAL](docs/ENGINEERING_JOURNAL.md) | Timestamped decisions and findings |
