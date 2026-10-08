@@ -19,23 +19,30 @@ Measured, not estimated. "Before" numbers come from running the legacy app
 
 Docker image size: **1.11 GB** (from 2.75 GB first draft; see [DEPLOYMENT.md](DEPLOYMENT.md)). Legacy: no container; its environment needed TensorFlow (~600 MB+) and Jupyter just to serve the dashboard.
 
-## Page latency (server time, 30 requests each)
+## Page latency (server time, 30 requests each; re-measured 2026-10-08 on the final build)
+
+Measured with `scripts/benchmark.py` on an Apple-silicon Mac (Python 3.12, 8 cores), server
+and client on the same machine, so these are **server processing times**, not internet round trips.
 
 | Route | p50 | p95 |
 |---|---|---|
-| `/` overview (policy back-test over 9,043 leads) | 9.6 ms | 13.1 ms |
-| `/leads` | 5.9 ms | 9.2 ms |
-| `/leads?action=prioritise&page=3` | 4.6 ms | 6.8 ms |
-| `/leads/L43013` | 1.0 ms | 1.2 ms |
-| `/patterns` | 0.8 ms | 0.9 ms |
-| `/model` | 1.3 ms | 1.5 ms |
-| `/policy` | 6.7 ms | 7.4 ms |
-| `/method` | 0.5 ms | 0.6 ms |
-| `POST /leads/{id}/whatif` (50 requests) | 27.1 ms | 31.0 ms |
-| `POST /api/v1/assess` (50 requests) | 27.1 ms | 30.1 ms |
-| `POST /policy` (re-run back-test) | 6.8 ms | 7.8 ms |
+| `/` Dashboard (policy back-test over 9,043 leads + charts) | 10.5 ms | 14.9 ms |
+| `/leads` | 7.1 ms | 9.3 ms |
+| `/leads?action=prioritise&page=3` | 5.3 ms | 7.6 ms |
+| `/leads/L43013` (cached scores + SHAP) | 1.1 ms | 1.3 ms |
+| `/patterns` Insights | 0.9 ms | 1.1 ms |
+| `/model` | 1.0 ms | 1.1 ms |
+| `/policy` Strategy | 6.9 ms | 8.5 ms |
+| `/about` | 0.6 ms | 0.9 ms |
+| `POST /leads/{id}/whatif` (40 requests, live model + 15 bootstrap members + SHAP) | 26.6 ms | 32.6 ms |
+| `POST /api/v1/assess` (40 requests) | 26.6 ms | 39.5 ms |
+| `POST /policy` (re-run back-test) | 8.2 ms | 11.2 ms |
 
-First page after start-up: 29.5 ms (template compilation).
+Cold start to healthy: 2.8 s. First page after start-up: 42 ms (template compilation).
+Server memory (RSS): ~110 MB. POST sample sizes stay under the app's 120/min per-IP rate limit.
+
+**Over the internet** (live Railway URL, measured from India): ~0.45–0.55 s time-to-first-byte
+per page, dominated by network distance to the hosting region, not by the application.
 
 ## What was optimised and why
 

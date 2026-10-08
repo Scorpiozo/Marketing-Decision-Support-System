@@ -89,4 +89,4 @@ curl -s https://<domain>/healthz                     # {"status":"ok","model_loa
 curl -s -o /dev/null -w "%{http_code}\n" https://<domain>/   # 303 to /login when gated
 ```
 
-Then log in and walk the demo path: Overview → a lead → what-if → Model & XAI → Method & limits.
+Then walk the demo path: Dashboard → a lead → what-if → Strategy → Model.

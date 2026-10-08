@@ -3,7 +3,7 @@
 ## Current result
 
 ```
-uv run pytest -q -p no:warnings      → 56 passed (≈1.9 s)
+uv run pytest -q -p no:warnings      → 59 passed (≈1.9 s)
 uv run ruff check . && ruff format --check .  → clean
 uv run pyright                        → 0 errors, 7 warnings
 ```
@@ -39,7 +39,7 @@ so no training happens during the test run.
 ## Accessibility
 
 axe-core, WCAG 2.0/2.1/2.2 A and AA tags, on `/`, `/leads`, `/leads/L43013`, `/patterns`,
-`/model`, `/policy`, `/method`, `/login`: **0 violations** after these fixes:
+`/model`, `/policy`, `/method` (now `/about`), `/login`: **0 violations** after these fixes (re-checked after the 2026-10-08 UI redesign on all 7 live pages: 0 violations):
 
 * muted text token darkened (contrast was 3.8–4.1:1, needed 4.5:1);
 * links inside running text underlined (were colour-only);
@@ -63,6 +63,8 @@ coloured mark is paired with a text label.
 | Production Docker image with `APP_PASSWORD` | Unauthenticated → redirect to login; after login all pages 200; process runs as non-root `app` |
 
 ## Usability review by persona
+
+> **Note (2026-10-08).** This review was done on the pre-redesign UI. After the client-facing redesign the site keeps the decision card, likelihood gauge, SHAP explanation, what-if, strategy sliders and model comparison; the research detail it used to show (CNN permutation test, leakage/out-of-time ablation, per-lead caveats, "stable/borderline" wording) now lives in `docs/` (EXPERIMENTS, LIMITATIONS, FACULTY_VIVA_GUIDE). Page names changed: Overview → Dashboard, Interaction patterns → Insights, Model & XAI → Model, Decision policy → Strategy, Method & limits → About.
 
 | Persona | Question | Where it is answered | Gap / note |
 |---|---|---|---|

@@ -20,6 +20,7 @@ from pathlib import Path
 import httpx
 
 ROOT = Path(__file__).resolve().parents[1]
+# POST samples stay under the app's 120/min per-IP rate limit (40 + 40 + 30 = 110).
 PAGES = [
     "/",
     "/leads",
@@ -27,7 +28,7 @@ PAGES = [
     "/patterns",
     "/model",
     "/policy",
-    "/method",
+    "/about",
 ]
 
 
@@ -76,8 +77,8 @@ def main() -> None:
             lead_id = c.get("/api/v1/leads/L43013").json()["lead_id"]
             lead = c.get(f"/api/v1/leads/{lead_id}").json()["lead"]
             pages[f"/leads/{lead_id}"] = timed(c, "GET", f"/leads/{lead_id}", 30)
-            whatif = timed(c, "POST", f"/leads/{lead_id}/whatif", 50, data={**lead, "campaign": 7})
-            api = timed(c, "POST", "/api/v1/assess", 50, json={**lead, "campaign": 7})
+            whatif = timed(c, "POST", f"/leads/{lead_id}/whatif", 40, data={**lead, "campaign": 7})
+            api = timed(c, "POST", "/api/v1/assess", 40, json={**lead, "campaign": 7})
             policy = timed(
                 c,
                 "POST",

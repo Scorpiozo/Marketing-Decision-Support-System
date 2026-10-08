@@ -6,7 +6,7 @@ The goal is that a user can follow the whole chain on one screen:
 lead data → features → model → probability → explanation → interaction pattern → recommended action
 ```
 
-Explanations are not a separate "XAI page". They sit inside the lead card next to the decision, and global views are on **Model & XAI** and **Interaction patterns**.
+Explanations are not a separate "XAI page". They sit inside the lead card next to the decision, and global views are on the **Model** and **Insights** pages.
 
 ## Method choice: exact TreeSHAP
 

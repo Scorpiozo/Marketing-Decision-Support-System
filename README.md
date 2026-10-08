@@ -13,7 +13,7 @@ should be left alone — and shows the evidence behind every recommendation.**
 | Held-out quality | ROC-AUC **0.808** · PR-AUC **0.466** (base rate 0.117) · Brier **0.0804** · calibration error **0.9 %** |
 | Decision back-test | Contacting **33 %** of held-out leads captures **74 %** of actual subscriptions; "Prioritise" leads subscribe at **55 %** |
 | Explanations | Exact TreeSHAP per lead (verified additivity error 1.6e-14), global SHAP, interaction values, live what-if |
-| Stack | FastAPI + Jinja2 + HTMX, server-rendered SVG charts, `uv`, `ruff`, `pyright`, 56 tests |
+| Stack | FastAPI + Jinja2 + HTMX, server-rendered SVG charts, `uv`, `ruff`, `pyright`, 59 tests |
 
 This is a **research prototype for human decision support**. It is not an autonomous
 decision-maker, it is not connected to any bank, and it makes no regulatory claim.
@@ -178,7 +178,7 @@ set `APP_PASSWORD` and `SESSION_SECRET` for any public URL. See [DEPLOYMENT](doc
 ## Testing
 
 ```bash
-uv run pytest            # 56 tests: unit, ML, integration, web, regression
+uv run pytest            # 59 tests: unit, ML, integration, web, regression
 uv run ruff check . && uv run ruff format --check .
 uv run pyright           # 0 errors
 ```

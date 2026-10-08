@@ -86,7 +86,7 @@ external service is needed: the held-out portfolio is 9,043 rows and fits in mem
 
 | Method / path | Purpose |
 |---|---|
-| `GET /`, `/leads`, `/leads/{id}`, `/patterns`, `/model`, `/policy`, `/method` | Pages |
+| `GET /`, `/leads`, `/leads/{id}`, `/patterns`, `/model`, `/policy`, `/about` | Pages: Dashboard, Leads, lead page, Insights, Model, Strategy, About (`/method` → 301 to `/about`) |
 | `POST /leads/{id}/whatif` | Live re-score fragment |
 | `POST /policy` | Update assumptions (cookie) and return back-test fragment |
 | `POST /api/v1/assess` | Score any valid lead (JSON in/out) |
