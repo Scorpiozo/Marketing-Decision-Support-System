@@ -1,40 +1,33 @@
-import os
-import numpy as np
-import joblib
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+"""
+Model training, evaluation and persistence.
 
-from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
+Exactly two predictive models are supported:
+
+* ``gradient_boosting`` - scikit-learn GradientBoostingClassifier
+* ``random_forest``     - scikit-learn RandomForestClassifier
+
+Both are trained on the same preprocessed feature matrix (see
+src/preprocessing.py and models/feature_order.json) and both use balanced
+class weighting, so their probabilities sit on a comparable scale for the
+fixed HOT / WARM / COLD thresholds in src/prediction.py.
+"""
+
+import json
+import os
+
+import joblib
+import numpy as np
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.metrics import (
-    accuracy_score, precision_score, recall_score, f1_score,
-    roc_auc_score, average_precision_score, confusion_matrix,
+    accuracy_score, average_precision_score, confusion_matrix, f1_score,
+    precision_score, recall_score, roc_auc_score,
 )
+from sklearn.utils.class_weight import compute_sample_weight
+
+from src.config import MODELS_DIR, PRODUCTION_MODEL_PATH
 
 RANDOM_STATE = 42
-
-
-def set_seeds(seed=RANDOM_STATE):
-    np.random.seed(seed)
-    tf.random.set_seed(seed)
-
-
-def train_logistic_regression(X_train, y_train):
-    model = LogisticRegression(max_iter=2000, class_weight="balanced", random_state=RANDOM_STATE)
-    model.fit(X_train, y_train)
-    return model
-
-
-def train_decision_tree(X_train, y_train, balanced=True):
-    model = DecisionTreeClassifier(
-        max_depth=7,
-        class_weight="balanced" if balanced else None,
-        random_state=RANDOM_STATE,
-    )
-    model.fit(X_train, y_train)
-    return model
+DECISION_THRESHOLD = 0.5
 
 
 def train_random_forest(X_train, y_train):
@@ -49,101 +42,54 @@ def train_random_forest(X_train, y_train):
     return model
 
 
-
-# 1D CNN for tabular data
-
-def build_cnn_model(input_dim, learning_rate=1e-3):
-    set_seeds()
-
-    inputs = keras.Input(shape=(input_dim, 1), name="feature_vector")
-
-    x = layers.Conv1D(filters=32, kernel_size=3, padding="same", activation="relu")(inputs)
-    x = layers.BatchNormalization()(x)
-    x = layers.MaxPooling1D(pool_size=2)(x)
-
-    x = layers.Conv1D(filters=64, kernel_size=3, padding="same", activation="relu")(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.MaxPooling1D(pool_size=2)(x)
-
-    x = layers.Flatten()(x)
-    x = layers.Dense(64, activation="relu")(x)
-    x = layers.Dropout(0.3)(x)
-    x = layers.Dense(32, activation="relu")(x)
-    x = layers.Dropout(0.2)(x)
-
-    outputs = layers.Dense(1, activation="sigmoid", name="subscription_probability")(x)
-
-    model = keras.Model(inputs=inputs, outputs=outputs, name="bank_marketing_cnn")
-
-    model.compile(
-        optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
-        loss="binary_crossentropy",
-        metrics=[
-            "accuracy",
-            keras.metrics.AUC(name="auc"),
-        ],
+def train_gradient_boosting(X_train, y_train):
+    # GradientBoostingClassifier has no class_weight argument; balanced
+    # sample weights give the same ~88/12 imbalance handling used by the
+    # Random Forest.
+    model = GradientBoostingClassifier(
+        n_estimators=300,
+        learning_rate=0.1,
+        max_depth=4,
+        subsample=0.9,
+        random_state=RANDOM_STATE,
     )
+    model.fit(X_train, y_train, sample_weight=compute_sample_weight("balanced", y_train))
     return model
 
 
-def reshape_for_cnn(X):
-    return np.asarray(X).reshape((X.shape[0], X.shape[1], 1))
+# Single source of truth for the supported models.
+MODEL_REGISTRY = {
+    "gradient_boosting": {
+        "display_name": "Gradient Boosting",
+        "filename": "gradient_boosting.joblib",
+        "trainer": train_gradient_boosting,
+    },
+    "random_forest": {
+        "display_name": "Random Forest",
+        "filename": "random_forest.joblib",
+        "trainer": train_random_forest,
+    },
+}
 
 
-def train_cnn_model(
-    X_train, y_train, X_val=None, y_val=None,
-    epochs=40, batch_size=256, learning_rate=1e-3, verbose=1,
-):
-    set_seeds()
-
-    X_train_cnn = reshape_for_cnn(X_train)
-    y_train = np.asarray(y_train)
-
-    model = build_cnn_model(input_dim=X_train.shape[1], learning_rate=learning_rate)
-
-    early_stop = keras.callbacks.EarlyStopping(
-        monitor="val_loss", patience=6, restore_best_weights=True
-    )
-
-    # Class weights to handle the ~88/12 class imbalance without discarding data
-    n_pos = y_train.sum()
-    n_neg = len(y_train) - n_pos
-    class_weight = {0: 1.0, 1: n_neg / max(n_pos, 1)}
-
-    fit_kwargs = dict(
-        epochs=epochs,
-        batch_size=batch_size,
-        callbacks=[early_stop],
-        class_weight=class_weight,
-        verbose=verbose,
-    )
-
-    if X_val is not None and y_val is not None:
-        X_val_cnn = reshape_for_cnn(X_val)
-        history = model.fit(
-            X_train_cnn, y_train,
-            validation_data=(X_val_cnn, np.asarray(y_val)),
-            **fit_kwargs,
+def model_path(model_key, models_dir=MODELS_DIR):
+    if model_key not in MODEL_REGISTRY:
+        raise KeyError(
+            f"Unknown model '{model_key}'. Supported models: {sorted(MODEL_REGISTRY)}"
         )
-    else:
-        history = model.fit(
-            X_train_cnn, y_train,
-            validation_split=0.15,
-            **fit_kwargs,
-        )
-
-    return model, history
+    return os.path.join(models_dir, MODEL_REGISTRY[model_key]["filename"])
 
 
-def cnn_predict_proba(model, X):
-    """Return P(y=1) for each row in X using the trained CNN."""
-    X_cnn = reshape_for_cnn(np.asarray(X))
-    probs = model.predict(X_cnn, verbose=0).ravel()
-    return probs
+def display_name(model_key):
+    return MODEL_REGISTRY[model_key]["display_name"]
 
 
+def predict_proba(model, X):
+    """Return P(y=1) for each row of the preprocessed matrix X."""
+    return model.predict_proba(np.asarray(X))[:, 1]
 
-# Shared evaluation utilities
+
+# Evaluation
 
 def evaluate_model(y_true, y_pred, y_prob=None, model_name="model"):
     metrics = {
@@ -163,22 +109,89 @@ def get_confusion_matrix(y_true, y_pred):
     return confusion_matrix(y_true, y_pred)
 
 
+# Persistence
 
-# Persistence helpers
-
-def save_sklearn_model(model, path):
+def save_model(model, model_key, models_dir=MODELS_DIR):
+    path = model_path(model_key, models_dir)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     joblib.dump(model, path)
+    return path
 
 
-def load_sklearn_model(path):
+def load_model(model_key, models_dir=MODELS_DIR):
+    path = model_path(model_key, models_dir)
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Model file not found at '{path}'. Run `python train_and_evaluate.py` first."
+        )
     return joblib.load(path)
 
 
-def save_cnn_model(model, path="models/cnn_model.keras"):
+def save_production_model_info(model_key, selected_by, metrics, path=PRODUCTION_MODEL_PATH):
+    payload = {
+        "model_key": model_key,
+        "display_name": display_name(model_key),
+        "filename": MODEL_REGISTRY[model_key]["filename"],
+        "selected_by": selected_by,
+        "test_metrics": {k: (round(float(v), 4) if k != "Model" else v) for k, v in metrics.items()},
+    }
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    model.save(path)
+    with open(path, "w") as f:
+        json.dump(payload, f, indent=2)
+    return payload
 
 
-def load_cnn_model(path="models/cnn_model.keras"):
-    return keras.models.load_model(path)
+def load_production_model_info(path=PRODUCTION_MODEL_PATH):
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Production model metadata not found at '{path}'. "
+            "Run `python train_and_evaluate.py` first."
+        )
+    with open(path) as f:
+        info = json.load(f)
+    if info.get("model_key") not in MODEL_REGISTRY:
+        raise ValueError(f"production_model.json names an unsupported model: {info.get('model_key')!r}")
+    return info
+
+
+def load_production_model(models_dir=MODELS_DIR, info_path=PRODUCTION_MODEL_PATH):
+    """Return (model, info) for the model used to generate decision outputs."""
+    info = load_production_model_info(info_path)
+    return load_model(info["model_key"], models_dir), info
+
+
+# Evaluation details for the API / reports
+
+def roc_points(y_true, y_prob, max_points=120):
+    """ROC curve downsampled to at most ``max_points`` (fpr, tpr, threshold) rows."""
+    from sklearn.metrics import roc_curve
+
+    fpr, tpr, thr = roc_curve(y_true, y_prob)
+    if len(fpr) > max_points:
+        idx = np.unique(np.linspace(0, len(fpr) - 1, max_points).round().astype(int))
+        fpr, tpr, thr = fpr[idx], tpr[idx], thr[idx]
+    thr = np.clip(thr, 0.0, 1.0)  # sklearn's first threshold is +inf
+    return [[round(float(a), 4), round(float(b), 4), round(float(c), 4)] for a, b, c in zip(fpr, tpr, thr)]
+
+
+def grouped_feature_importances(model, fitted_preprocessor):
+    """Sum one-hot importances back onto their original input column.
+
+    Returns [{"feature": name, "importance": share}] sorted descending; the
+    shares sum to 1.
+    """
+    from src.preprocessing import CATEGORICAL_FEATURES, NUMERIC_FEATURES
+
+    importances = np.asarray(model.feature_importances_, dtype=float)
+    encoder = fitted_preprocessor.named_transformers_["cat"].named_steps["onehot"]
+    owners = list(NUMERIC_FEATURES)
+    for col, cats in zip(CATEGORICAL_FEATURES, encoder.categories_):
+        owners.extend([col] * len(cats))
+    if len(owners) != len(importances):
+        raise ValueError("Feature importances do not line up with the preprocessor's features.")
+    totals = {}
+    for owner, value in zip(owners, importances):
+        totals[owner] = totals.get(owner, 0.0) + value
+    total = sum(totals.values()) or 1.0
+    rows = [{"feature": k, "importance": round(v / total, 4)} for k, v in totals.items()]
+    return sorted(rows, key=lambda r: r["importance"], reverse=True)

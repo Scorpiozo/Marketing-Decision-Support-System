@@ -2,15 +2,20 @@
   "n_train": 36168,
   "n_test": 9043,
   "n_features_after_encoding": 51,
-  "best_model_by_roc_auc": "Random Forest",
-  "best_model_by_recall": "Decision Tree (balanced)",
-  "best_model_by_f1": "1D CNN",
-  "production_model_used_for_final_output": "1D CNN",
-  "cnn_test_roc_auc": 0.9214547479738121,
+  "models_trained": [
+    "Gradient Boosting",
+    "Random Forest"
+  ],
+  "best_model_by_roc_auc": "Gradient Boosting",
+  "best_model_by_recall": "Gradient Boosting",
+  "best_model_by_f1": "Gradient Boosting",
+  "production_model_used_for_final_output": "Gradient Boosting",
+  "production_model_selected_by": "highest test ROC-AUC",
+  "production_model_test_roc_auc": 0.9299,
   "lead_temperature_counts": {
-    "COLD": 6739,
-    "HOT": 1349,
-    "WARM": 955
+    "COLD": 6753,
+    "HOT": 1453,
+    "WARM": 837
   },
   "interaction_pattern_counts": {
     "No Previous Interaction": 5652,

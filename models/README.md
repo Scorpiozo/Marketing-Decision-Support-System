@@ -1,18 +1,20 @@
 # Models folder
 
-This folder holds trained artifacts produced by `train_and_evaluate.py`
-(or by running the notebook):
+Trained artifacts produced by `train_and_evaluate.py`:
 
 | File | Description |
 |---|---|
 | `preprocessor.joblib` | Fitted scikit-learn `ColumnTransformer` (scaling + one-hot encoding), fit on the training split only |
-| `feature_order.json` | The exact, fixed, documented order of engineered features fed to every model (including the 1D CNN's `(n_features,) → (n_features, 1)` input) — see README.md §7 |
-| `logistic_regression.joblib` | Trained Logistic Regression baseline |
-| `decision_tree.joblib` | Trained (balanced) Decision Tree baseline |
-| `random_forest.joblib` | Trained Random Forest baseline |
-| `cnn_model.keras` | Trained 1D CNN (used by the Streamlit dashboard's Marketing Overview/Customer Analysis pages via `outputs/final_predictions.csv`, and loaded directly by the **New Customer Analysis** page for on-demand single-record scoring) |
+| `feature_order.json` | The exact, fixed order of the 51 engineered features fed to both models (see README.md §5) |
+| `gradient_boosting.joblib` | Trained Gradient Boosting classifier |
+| `random_forest.joblib` | Trained Random Forest classifier |
+| `production_model.json` | Which of the two models generates the decision outputs, how it was selected, and its test metrics |
 
-These files are regenerated every time `train_and_evaluate.py` is run, so
-it's safe to delete everything in this folder and re-run the script.
-`preprocessor.joblib` and `cnn_model.keras` are also loaded directly (never
-retrained) by the dashboard's New Customer Analysis page.
+The API (`api/service.py`) loads the preprocessor, checks it against
+`feature_order.json`, and loads both model files once at startup.
+`production_model.json` decides which model the dashboard uses by default.
+Nothing is retrained by the API or the dashboard.
+
+All files are regenerated every time `train_and_evaluate.py` runs, so it is
+safe to delete everything in this folder (except this README) and re-run
+the script.

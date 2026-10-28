@@ -1,11 +1,14 @@
+import json
 import os
+
 import joblib
-import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
+
+from src.config import DATA_PATH, FEATURE_ORDER_PATH, PREPROCESSOR_PATH
 
 
 NUMERIC_FEATURES = ["age", "balance", "day", "duration", "campaign", "pdays", "previous"]
@@ -16,18 +19,20 @@ CAMPAIGN_CATEGORICAL_FEATURES = ["contact", "month", "poutcome"]
 
 CATEGORICAL_FEATURES = CUSTOMER_CATEGORICAL_FEATURES + CAMPAIGN_CATEGORICAL_FEATURES
 
+# Group order defines the engineered feature order (numeric first, then
+# customer categoricals, then campaign/contact categoricals). Do not reorder.
 FEATURE_GROUPS = {
-    "numerical_customer_features": NUMERIC_FEATURES,
-    "customer_categorical_features": CUSTOMER_CATEGORICAL_FEATURES,
-    "campaign_contact_features": CAMPAIGN_CATEGORICAL_FEATURES,
+    "1_numerical_customer_features": NUMERIC_FEATURES,
+    "2_customer_categorical_features": CUSTOMER_CATEGORICAL_FEATURES,
+    "3_campaign_contact_features": CAMPAIGN_CATEGORICAL_FEATURES,
 }
+
+REQUIRED_INPUT_COLUMNS = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
 TARGET_COLUMN = "y"
 
-DISPLAY_COLUMNS = ["age", "job", "balance", "contact", "campaign", "previous", "poutcome"]
 
-
-def load_raw_data(data_path="data/bank-full.csv"):
+def load_raw_data(data_path=DATA_PATH):
     if not os.path.exists(data_path):
         raise FileNotFoundError(
             f"Could not find the dataset at '{data_path}'.\n"
@@ -41,7 +46,7 @@ def load_raw_data(data_path="data/bank-full.csv"):
         df = pd.read_csv(data_path, sep=";")
 
     df.columns = [c.strip().strip('"') for c in df.columns]
-    for col in df.select_dtypes(include="object").columns:
+    for col in df.select_dtypes(include=["object", "string"]).columns:
         df[col] = df[col].astype(str).str.strip().str.strip('"')
 
     return df
@@ -113,25 +118,16 @@ def get_feature_names(fitted_preprocessor):
     return list(num_names) + cat_names
 
 
-FEATURE_ORDER_PATH = "models/feature_order.json"
-
-
 def save_feature_order(fitted_preprocessor, path=FEATURE_ORDER_PATH):
-    import json
-
     feature_names = get_feature_names(fitted_preprocessor)
     payload = {
         "description": (
             "Fixed, reproducible order of engineered features fed to every "
-            "model (Logistic Regression, Decision Tree, Random Forest, and "
-            "the 1D CNN). The CNN reshapes this vector from (n_features,) "
-            "to (n_features, 1) in exactly this order."
+            "model (Gradient Boosting and Random Forest). Produced by "
+            "models/preprocessor.joblib; new records must be transformed by "
+            "that same preprocessor so columns arrive in exactly this order."
         ),
-        "feature_groups": {
-            "1_numerical_customer_features": NUMERIC_FEATURES,
-            "2_customer_categorical_features": CUSTOMER_CATEGORICAL_FEATURES,
-            "3_campaign_contact_features": CAMPAIGN_CATEGORICAL_FEATURES,
-        },
+        "feature_groups": FEATURE_GROUPS,
         "n_features_total": len(feature_names),
         "final_feature_order": feature_names,
     }
@@ -142,8 +138,6 @@ def save_feature_order(fitted_preprocessor, path=FEATURE_ORDER_PATH):
 
 
 def load_feature_order(path=FEATURE_ORDER_PATH):
-    import json
-
     if not os.path.exists(path):
         raise FileNotFoundError(
             f"Feature order file not found at '{path}'. Run the training "
@@ -153,8 +147,23 @@ def load_feature_order(path=FEATURE_ORDER_PATH):
         return json.load(f)
 
 
+def validate_feature_order(fitted_preprocessor, path=FEATURE_ORDER_PATH):
+    """Raise if the preprocessor's output columns differ from feature_order.json.
+
+    Guards against pairing a model with a preprocessor from a different run.
+    """
+    expected = load_feature_order(path)["final_feature_order"]
+    actual = get_feature_names(fitted_preprocessor)
+    if actual != expected:
+        raise ValueError(
+            "Preprocessor feature order does not match models/feature_order.json. "
+            "Re-run `python train_and_evaluate.py` so all artifacts come from the same run."
+        )
+    return actual
+
+
 def transform_new_records(df_new, fitted_preprocessor):
-    missing_cols = [c for c in NUMERIC_FEATURES + CATEGORICAL_FEATURES if c not in df_new.columns]
+    missing_cols = [c for c in REQUIRED_INPUT_COLUMNS if c not in df_new.columns]
     if missing_cols:
         raise ValueError(f"New records are missing required columns: {missing_cols}")
     return fitted_preprocessor.transform(df_new)
@@ -168,21 +177,21 @@ def get_categorical_options(fitted_preprocessor):
     }
 
 
-def save_preprocessor(preprocessor, path="models/preprocessor.joblib"):
+def save_preprocessor(preprocessor, path=PREPROCESSOR_PATH):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     joblib.dump(preprocessor, path)
 
 
-def load_preprocessor(path="models/preprocessor.joblib"):
+def load_preprocessor(path=PREPROCESSOR_PATH):
     if not os.path.exists(path):
         raise FileNotFoundError(
-            f"Preprocessor not found at '{path}'. Run the notebook / training "
-            "script first so it can be created and saved."
+            f"Preprocessor not found at '{path}'. Run `python train_and_evaluate.py` "
+            "first so it can be created and saved."
         )
     return joblib.load(path)
 
 
-def load_and_prepare(data_path="data/bank-full.csv", test_size=0.2, random_state=42):
+def load_and_prepare(data_path=DATA_PATH, test_size=0.2, random_state=42):
     df = load_raw_data(data_path)
     df = clean_data(df)
     df = encode_target(df)
@@ -209,7 +218,7 @@ def load_and_prepare(data_path="data/bank-full.csv", test_size=0.2, random_state
 
 
 if __name__ == "__main__":
-    result = load_and_prepare(data_path="data/bank-full.csv")
+    result = load_and_prepare()
     print("Raw shape:", result["raw_df"].shape)
     print("Train shape (processed):", result["X_train_proc"].shape)
     print("Test shape (processed):", result["X_test_proc"].shape)

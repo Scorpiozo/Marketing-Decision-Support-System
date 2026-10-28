@@ -1,0 +1,7 @@
+-r requirements.txt
+pytest>=7.4
+
+# Optional: browser end-to-end tests (tests/test_frontend.py).
+# After installing, also run: python -m playwright install chromium
+# The browser tests are skipped automatically if these are missing.
+playwright>=1.40

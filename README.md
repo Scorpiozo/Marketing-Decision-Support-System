@@ -4,15 +4,22 @@ A college project built on the **UCI Bank Marketing dataset**: a
 prototype decision-support tool that helps a bank's marketing team decide
 who to follow up with and what marketing action to consider next.
 
-This README is written for a **college student**, not an ML researcher —
-it explains *what* each part does and *why*, without assuming prior deep
-learning experience.
-
 > **This is a prototype.** It is not connected to a live bank CRM. The
-> dashboard displays predictions already generated for the existing/test
-> portion of the UCI dataset — it does not accept brand-new customers in
-> real time. This is an intentional scope decision for an academic
-> project, explained further in §14.
+> dashboard shows historical campaign analysis, predictions for the
+> held-out test portion of the UCI dataset, and a form that scores one
+> manually entered customer (§14).
+
+**Quick start**
+
+```bash
+python -m venv .venv
+# Windows: .venv\Scripts\activate     macOS/Linux: source .venv/bin/activate
+python -m pip install -r requirements.txt
+python run.py                         # then open http://localhost:5000
+```
+
+Trained models and outputs already ship in `models/` and `outputs/`;
+`python train_and_evaluate.py` rebuilds them (about a minute).
 
 ---
 
@@ -30,11 +37,10 @@ answers, in order:
 4. **What action should the bank consider next for a given customer or
    segment?**
 
-This project answers all four — first with historical, observed campaign
-analysis (Executive Overview, Campaign Drivers, Customer Segments), then
+The first two are answered with historical, observed campaign analysis
+(Executive overview, Campaign insights); the last two
 with model-predicted, per-customer targeting and recommendations
-(Actionable Targeting) — and ranks customers so the team knows who to
-prioritize first.
+(Actionable targeting).
 
 ---
 
@@ -43,96 +49,82 @@ prioritize first.
 **UCI Bank Marketing dataset**
 (https://archive.ics.uci.edu/dataset/222/bank+marketing) — 45,211 customer
 records from a Portuguese bank's phone marketing campaigns, with 16 input
-features (age, job, marital status, education, account balance, loan
-status, contact type, campaign history, etc.) and one target column `y`
-(`yes`/`no` — did the customer subscribe to a term deposit?).
+features and one target column `y` (`yes`/`no` — did the customer
+subscribe to a term deposit?). The target is imbalanced: about 88% "no"
+and 12% "yes".
 
-The target is imbalanced: about 88% "no" and 12% "yes".
-
-See `data/README.md` for exactly where to get the CSV file.
+The file lives at `data/bank-full.csv`. It is **read-only** for this
+project: no script writes to it. See `data/README.md` for its source.
 
 ---
 
 ## 3. Objective
 
-Build a dashboard and modeling pipeline that lets someone unfamiliar with
-the project go from *"what's the conversion rate?"* to *"who converts?"*
-to *"what factors matter?"* to *"who should the bank target, and what
-should they do next?"* — using a mix of honest historical/observed
-analysis (§14A) and per-customer model predictions (§14B: **Conversion
-Probability**, **Lead Temperature**, **Interaction Pattern**, **Contact
-Fatigue**, combined into a plain-English **Recommendation**) — comparing
-classical ML models against a required advanced deep-learning model (1D
-CNN) honestly, without exaggerating either side.
+Go from *"what's the conversion rate?"* to *"who converts?"* to *"what
+factors matter?"* to *"who should the bank target, and what should they
+do next?"* — using honest historical analysis (§14A) and per-customer
+model predictions (§14B: **Conversion Probability**, **Lead
+Temperature**, **Interaction Pattern**, **Contact Fatigue**, combined into
+a plain-English **Recommendation**).
 
 ---
 
-## 4. System architecture (in simple language)
+## 4. System architecture
 
 ```
-Raw customer data (bank-full.csv, 45,211 rows)
+Raw customer data (data/bank-full.csv, 45,211 rows, read-only)
         │
         ├─────────────────────────────────────────────┐
         ▼                                              ▼
  Preprocessing (src/preprocessing.py)           Historical analytics
-   - fill/label "unknown" categories             (src/analytics.py)
+   - keep "unknown" as a category                (src/analytics.py)
    - scale numeric columns                        - actual conversion rates
-   - one-hot encode categorical columns            - by month/contacts/outcome/
-   - train/test split (fit on TRAIN only)            duration/segment, w/ sample
-        │                                            sizes and reliability flags
+   - one-hot encode categorical columns            by month/contacts/outcome/
+   - stratified 80/20 split (fit on TRAIN only)    duration/segment, with sample
+   - fixed feature order -> feature_order.json     sizes and reliability flags
+        │                                              │
         ▼                                              │
  Model training (src/model.py)                          │
-   - baselines: Logistic Regression,                     │
-     Decision Tree, Random Forest                         │
-   - 1D CNN (TensorFlow/Keras)  <-- used for final outputs │
-        │                                                  │
-        ▼                                                  │
- Prediction / decision layer (src/prediction.py)            │
-   MODEL OUTPUT:        conversion_probability (test split)  │
-   DECISION LAYER:       lead_temperature   (HOT / WARM / COLD)
-                         interaction_pattern (src/interaction_analysis.py)
-                         contact_fatigue     (LOW / MEDIUM / HIGH)
-   RECOMMENDATION:       plain-English next action, combining all three
-        │                                                  │
-        ▼                                                  │
- Final ranked dataframe + Top Priority Customers table       │
-        │                                                    │
-        ▼                                                    ▼
- Streamlit dashboard (app/streamlit_app.py) - business hierarchy:
-   1. Executive Overview     (historical KPIs)
-   2. Campaign Drivers       (historical conversion-rate charts)
-   3. Customer Segments      (historical conversion-rate charts)
-   4. Actionable Targeting   (model-predicted leads + recommendations)
-   -- supporting pages --
-   5. Customer Lookup        (look up one test-set customer)
-   6. New Customer Analysis  (live single-customer scoring)
-   7. Model Performance      (honest technical comparison)
-   8. About This Project
+   - Gradient Boosting   ┐ both trained & compared;     │
+   - Random Forest       ┘ best test ROC-AUC = production model
+        │                                              │
+        ▼                                              │
+ Prediction / decision layer (src/prediction.py)        │
+   MODEL OUTPUT:    conversion_probability              │
+   DECISION LAYER:  lead_temperature   (HOT / WARM / COLD)
+                    interaction_pattern (src/interaction_analysis.py)
+                    contact_fatigue     (LOW / MEDIUM / HIGH)
+   RECOMMENDATION:  plain-English next action, combining all three
+        │                                              │
+        ▼                                              ▼
+ Flask API (api/)  - loads data + both models ONCE at startup
+        │            - JSON endpoints; filtered aggregates are memoised
+        ▼
+ Frontend (frontend/: HTML + CSS + vanilla JavaScript, SVG charts)
+   1. Executive overview    (historical KPIs + model lead snapshot)
+   2. Campaign insights     (historical drivers + customer segments)
+   3. Actionable targeting  (model-predicted leads, customer table,
+                             customer detail, score a new customer)
+   4. Model performance     (metrics, ROC, confusion, feature importance)
 ```
 
-The notebook (`notebooks/bank_marketing_cnn.ipynb`) walks through the model
-training half of this diagram interactively and produces the same
-artifacts as the scripted pipeline (`train_and_evaluate.py`), which is
-meant for a single one-command run. Both reuse the exact same code in
-`src/` — there is only one implementation of preprocessing, the models,
-the rules, and the recommendation logic.
+There is exactly one implementation of preprocessing, the models, the
+rules and the recommendation logic, all in `src/`. `train_and_evaluate.py`
+is the single training entry point. The API only loads its saved
+artifacts and never retrains; the frontend only talks to the API.
 
-**Two data sources, kept clearly separate:** the dashboard's first three
-pages (Overview, Drivers, Segments) use `src/analytics.py`, which computes
-plain counts/rates directly from the **full historical dataset with real
-outcomes** — no model involved. Actionable Targeting, Customer Lookup, and
-New Customer Analysis use `src/prediction.py` /
-`outputs/final_predictions.csv`, which are **model-predicted** probabilities
-on the held-out test split. Every relevant page states which kind of number
-it is showing, per §14.
+**Two data sources, kept clearly separate:** Executive overview and
+Campaign insights use `src/analytics.py`, which computes plain
+counts/rates from the **full historical dataset with real outcomes** — no
+model involved. Actionable targeting (and the lead snapshot on the
+overview) uses **model-predicted** probabilities for the held-out test
+split. Each page header states which kind of number it shows.
 
-**Model output vs. decision layer — an important distinction for the
-viva:** the CNN/ML model only ever produces one number:
-*"probability that the customer subscribes."* Everything else — Lead
-Temperature, Interaction Pattern, Contact Fatigue, and the Recommendation
-— is a **project-created rule** applied on top of that number and on
-existing UCI fields. None of these four are official UCI labels; this is
-called out again in each relevant section below.
+**Model output vs. decision layer:** the model only ever produces one
+number: *"probability that the customer subscribes."* Lead Temperature,
+Interaction Pattern, Contact Fatigue and the Recommendation are
+**project-created rules** applied on top of that number and on existing
+UCI fields. None of them are official UCI labels.
 
 ---
 
@@ -142,88 +134,22 @@ Implemented in `src/preprocessing.py`:
 
 - **Missing values**: the UCI file has no real NaNs, but several columns
   use the literal string `"unknown"` (e.g. `poutcome` is `"unknown"` for
-  ~82% of rows, since most customers were never contacted before). We keep
-  `"unknown"` as its own category rather than dropping those rows.
-- **Categorical encoding**: One-Hot Encoding via `sklearn.OneHotEncoder`.
+  ~82% of rows). `"unknown"` is kept as its own category. Any genuine NaNs
+  are filled defensively (median for numeric, mode for categorical).
+- **Categorical encoding**: `OneHotEncoder(handle_unknown="ignore")`, so an
+  unseen category in a new record becomes all-zeros instead of an error.
 - **Numerical scaling**: `StandardScaler` on `age`, `balance`, `day`,
-  `duration`, `campaign`, `pdays`, `previous`.
-- **Train/test split**: 80/20, stratified on the target so both splits keep
-  the same ~88/12 class balance.
-- **No leakage**: the `ColumnTransformer` (scaler + encoder) is `fit()` on
-  the **training split only**, then `.transform()`-ed on the test split and
-  on any new customer records — never re-fit on test/new data.
+  `duration`, `campaign`, `pdays`, `previous`. (Tree models don't need
+  scaling; it is kept so the saved feature representation is unchanged.)
+- **Train/test split**: 80/20, stratified on the target, `random_state=42`.
+- **No leakage**: the `ColumnTransformer` is `fit()` on the **training
+  split only**, then only `.transform()`-ed on the test split and on new
+  records.
 
----
+### Feature order — fixed, documented, saved
 
-## 6. Models
-
-| Model | Purpose |
-|---|---|
-| Logistic Regression | Simple, fast, highly interpretable baseline |
-| Decision Tree | Interpretable tree-based baseline |
-| Random Forest | Strong classical ML model (ensemble of decision trees) |
-| **1D CNN** | Advanced deep-learning model — required by the project brief, included to compare deep learning against conventional ML and to learn nonlinear patterns among neighbouring engineered features |
-
-All four are trained and evaluated on the **same** preprocessed train/test
-split for a fair comparison (see §8).
-
----
-
-## 7. CNN architecture
-
-CNNs (Convolutional Neural Networks) were designed for **images**, where
-nearby pixels are related. Our data is **tabular** — each column is an
-independent customer attribute, and **the dataset is not, and is never
-treated as, an image**.
-
-To meet the project requirement of using a CNN, `Conv1D` is applied the
-way it's commonly used for tabular data in applied ML:
-
-> *The 1D CNN is being evaluated as an advanced deep-learning architecture
-> on a structured feature representation. The feature ordering is fixed
-> and documented so that the convolution operation is reproducible.
-> Because tabular features do not possess the same natural spatial
-> structure as images, the CNN is treated as an experimental/academic
-> deep-learning approach rather than being assumed to be inherently
-> superior to tree-based models.*
-
-Concretely:
-
-1. Every customer is turned into a fixed-length numeric vector (after
-   scaling numeric columns and one-hot encoding categorical ones — 51
-   numbers in this dataset).
-2. That vector is reshaped from `(51,)` to `(51, 1)` and treated as an
-   ordered 1-D "signal".
-3. `Conv1D` layers slide a small filter across this vector, learning to
-   detect useful **local combinations of adjacent engineered features**.
-4. The result is flattened and passed through Dense layers to a single
-   sigmoid output (probability of subscription).
-
-```
-Input (51 features, 1 channel)
-  → Conv1D(32 filters, kernel=3) → BatchNorm → MaxPool1D
-  → Conv1D(64 filters, kernel=3) → BatchNorm → MaxPool1D
-  → Flatten
-  → Dense(64, relu) → Dropout(0.3)
-  → Dense(32, relu) → Dropout(0.2)
-  → Dense(1, sigmoid)
-```
-
-- Optimizer: Adam (lr=1e-3), Loss: binary cross-entropy
-- `EarlyStopping` on validation loss (patience=6, restores best weights)
-- Class weights applied to handle the ~88/12 imbalance
-- Random seeds set for reproducibility (`src/model.py::set_seeds`)
-- Kept intentionally small — this is a decision-support tool, not a
-  large-scale production model.
-
-### Feature ordering — fixed, documented, and saved
-
-Because Conv1D's convolution only means something reproducible if the
-position of each value in the vector is fixed, the feature order used to
-build the CNN's `(51,) → (51, 1)` input is **explicitly controlled**, not
-left to incidental DataFrame or `ColumnTransformer` ordering. It is defined
-as three fixed groups, combined in this exact order
-(`src/preprocessing.py::FEATURE_GROUPS`):
+The engineered feature vector (51 columns) is built from three groups in
+this exact order (`src/preprocessing.py::FEATURE_GROUPS`):
 
 | Order | Group | Fields |
 |---|---|---|
@@ -231,67 +157,70 @@ as three fixed groups, combined in this exact order
 | 2 | Customer categorical features (one-hot) | `job`, `marital`, `education`, `default`, `housing`, `loan` |
 | 3 | Campaign/contact features (one-hot) | `contact`, `month`, `poutcome` |
 
-This exact order — including every individual one-hot column name — is
-written to `models/feature_order.json` every time `train_and_evaluate.py`
-runs (via `src/preprocessing.py::save_feature_order()`), so the precise
-input vector the CNN was trained on can always be inspected and
-reproduced, rather than inferred from code.
+The full order, including every one-hot column name, is written to
+`models/feature_order.json` on every training run. When the dashboard
+loads the scoring artifacts it checks that the saved preprocessor still
+produces exactly this order (`validate_feature_order`) and refuses to
+score if a mismatched preprocessor/model pair is detected.
 
-**Why CNN is included:** (1) it is an academic requirement of the project
-brief, (2) it can learn nonlinear feature interactions that a linear model
-cannot, and (3) it gives a meaningful point of comparison between deep
-learning and conventional ML on this dataset — not because it is assumed
-to automatically outperform everything else (see the honest comparison
-below).
+---
+
+## 6. Models
+
+Exactly two predictive models are supported (`src/model.py::MODEL_REGISTRY`):
+
+| Model | Configuration | Purpose |
+|---|---|---|
+| **Gradient Boosting** | `GradientBoostingClassifier(n_estimators=300, learning_rate=0.1, max_depth=4, subsample=0.9)`, balanced sample weights | Sequential ensemble of shallow trees; each tree corrects the errors of the previous ones |
+| **Random Forest** | `RandomForestClassifier(n_estimators=200, max_depth=12, class_weight="balanced")` | Parallel ensemble of decorrelated trees; robust classical baseline |
+
+Both use `random_state=42`, are trained on the **same** preprocessed
+train/test split, and both handle the ~88/12 imbalance with balanced
+weighting. This keeps their probabilities on a comparable scale for the
+fixed HOT/WARM/COLD thresholds (§9).
+
+---
+
+## 7. Production model selection
+
+`train_and_evaluate.py` trains both models, then picks the one with the
+highest **test ROC-AUC** as the *production model*. It writes the choice
+to `models/production_model.json`, which the dashboard reads. To force a
+specific model:
+
+```bash
+python train_and_evaluate.py --production-model random_forest
+python train_and_evaluate.py --production-model gradient_boosting
+```
+
+Both models are always saved, so you can switch without changing code.
 
 ---
 
 ## 8. Model comparison
 
-All models are trained and evaluated on the **same** preprocessed
-train/test split. Metrics: Accuracy, Precision, Recall, F1-score, ROC-AUC,
-PR-AUC, and confusion matrix (see `outputs/model_comparison.csv`,
-`outputs/cnn_confusion_matrix.png`, and `outputs/roc_curves_all_models.png`
-after running the pipeline).
-
-**Actual results from the latest run** (also saved in
-`outputs/model_comparison.csv` — re-run `train_and_evaluate.py` to
-regenerate, numbers vary slightly run to run):
+Results from the shipped run (`outputs/model_comparison.csv`; same
+held-out test set of 9,043 customers, 0.5 decision threshold):
 
 | Model | Accuracy | Precision | Recall | F1-score | ROC-AUC | PR-AUC |
 |---|---|---|---|---|---|---|
-| Logistic Regression | 0.846 | 0.418 | 0.815 | 0.553 | 0.908 | 0.538 |
-| **Decision Tree (balanced)** | 0.795 | 0.350 | **0.877** | 0.500 | 0.885 | 0.519 |
-| **Random Forest** | **0.863** | **0.452** | 0.819 | **0.582** | 0.921 | **0.598** |
-| 1D CNN | 0.856 | 0.440 | 0.846 | 0.579 | **0.924** | 0.587 |
+| **Gradient Boosting** | **0.858** | **0.445** | **0.862** | **0.587** | **0.930** | **0.621** |
+| Random Forest | 0.846 | 0.423 | 0.861 | 0.567 | 0.924 | 0.603 |
 
-**Read honestly, not selectively:**
-- **Random Forest** has the best **F1-score** and Precision — the strongest
-  all-round classical model here.
-- **Decision Tree (balanced)** has the best **Recall** — it misses the
-  fewest actual subscribers, at the cost of many more false alarms.
-- **1D CNN** has the best **ROC-AUC** in this run, and Recall competitive
-  with Random Forest — but it does **not** clearly "win" on every metric,
-  and in other runs Random Forest's ROC-AUC is sometimes marginally ahead
-  (they are consistently close, ~0.92 for both).
+Gradient Boosting leads on every metric in this run, but the margins are
+small (ROC-AUC 0.930 vs 0.924; Recall is nearly identical). It is therefore
+the production model for the shipped outputs. Both models have moderate
+precision on the minority "yes" class, as expected with balanced weighting.
 
-**Which model is used for the final decision-support output?** The **1D
-CNN** is used to generate `conversion_probability` for every customer in
-`outputs/final_predictions.csv` and the Streamlit dashboard. This is
-because it is the project's required advanced deep-learning model and it
-remains competitive with (and in this run, ahead of) Random Forest on
-ROC-AUC — **not** because its numbers were selectively presented to make
-it look best. A faculty reviewer can substitute Random Forest's
-probabilities instead (both are saved in `models/`) without changing any
-other part of the system, since the decision layer only needs a
-probability column.
+Also generated: `outputs/roc_curves.png` (both models) and
+`outputs/confusion_matrix.png/.csv` (production model).
 
 ---
 
 ## 9. Lead classification (HOT / WARM / COLD)
 
 **Model output → decision layer.** From `src/prediction.py`, based on the
-CNN's `conversion_probability`:
+production model's `conversion_probability`:
 
 | Probability | Lead temperature |
 |---|---|
@@ -299,10 +228,9 @@ CNN's `conversion_probability`:
 | 0.40 – 0.70 | WARM |
 | < 0.40 | COLD |
 
-These are the project's default thresholds. They can be adjusted, but any
-change should be re-documented here to stay consistent with the code.
-`lead_temperature` is a **project-created decision label**, not something
-provided by the UCI dataset.
+These are the project's default thresholds. `lead_temperature` is a
+**project-created decision label**, not something provided by the UCI
+dataset.
 
 ---
 
@@ -379,169 +307,103 @@ explained line-by-line in a viva.
 
 ## 13. Final marketing output
 
-The final prediction table (`outputs/final_predictions.csv`) contains, per
-customer:
+`outputs/final_predictions.csv` contains, per test-set customer:
 
 | Column | Meaning |
 |---|---|
 | `customer_record_id` | **Project-generated** row identifier — see note below |
 | `age`, `job`, `balance`, `contact`, `campaign`, `previous`, `poutcome`, ... | Original customer/campaign attributes |
-| `conversion_probability` | **Model output** — CNN-predicted probability of subscription |
+| `conversion_probability` | **Model output** — production-model probability of subscription |
 | `lead_temperature` | **Decision layer** — HOT / WARM / COLD |
 | `interaction_pattern` | **Decision layer** — behavioural category |
 | `contact_fatigue` | **Decision layer** — LOW / MEDIUM / HIGH |
 | `recommendation` | **Recommendation** — combines the three decision-layer outputs |
 
-Sorted by `conversion_probability` descending. `outputs/top_priority_customers.csv`
-holds the top 50 by that same ranking.
+Sorted by `conversion_probability` descending.
+`outputs/top_priority_customers.csv` holds the top 50 by that ranking.
 
-**Note on `customer_record_id`:** the UCI Bank Marketing dataset does not
-provide a real customer identifier. `customer_record_id` is generated from
-each customer's row position in the working dataframe, purely so the
-notebook, script, and dashboard can refer to "this customer" consistently.
-It is **not** an official UCI field and should not be treated as a genuine
-customer ID in any real deployment.
+**Note on `customer_record_id`:** the UCI dataset has no real customer
+identifier. `customer_record_id` is generated from each customer's row
+position in the test split so the script and dashboard can refer to
+"this customer" consistently. It is **not** a genuine customer ID.
 
 ---
 
 ## 14. Historical analysis vs. model-predicted scoring
 
-This project shows **three distinct kinds of output**, and they should not
-be confused with each other:
-
 ### A. Historical / Observed Campaign Analysis
 
-The **Executive Overview**, **Campaign Drivers**, and **Customer
-Segments** dashboard pages (`src/analytics.py`) compute plain counts and
-rates directly from the **full 45,211-row dataset's actual, observed `y`
-outcomes** — no model is involved. A "43% conversion rate in March" here
-means 43% of real historical customers contacted in March actually
-subscribed. This is used to answer *"how did the campaign perform?"* and
-*"which factors are associated with conversion?"* — correlation, not a
+**Executive overview** and **Campaign insights** (`src/analytics.py`)
+compute plain counts and rates from the **full 45,211-row dataset's actual
+`y` outcomes** — no model is involved. This is correlation, not a
 guaranteed outcome for any individual customer.
 
 ### B. Model-Predicted Scoring
 
-`outputs/final_predictions.csv` contains **CNN-predicted probabilities**
-generated once (by `train_and_evaluate.py`) for the dataset's **test
-split** — real UCI records the model never saw during training. This
-powers:
-
-- **model evaluation** (§8 — Accuracy/Precision/Recall/F1/ROC-AUC/PR-AUC on
-  a consistent, held-out set),
-- **customer ranking** (the Top Priority Customers table on Actionable
-  Targeting), and
-- **the full decision-support output** (probability → lead temperature →
-  interaction pattern → contact fatigue → recommendation) on real UCI
-  data, viewable per-customer on Customer Lookup.
-
-A "78% conversion probability" here is a **model estimate for one
-customer**, not an observed historical rate — see §15 for exactly which
-pages use which source.
+At startup the API rebuilds the held-out **test split** (the same
+deterministic split used in training: real UCI records the models never
+saw) and scores it once with **each** model. Actionable targeting can show
+either model's scores. For the production model this is identical to
+`outputs/final_predictions.csv` (checked by the test suite).
 
 ### C. New Customer Demonstration
 
-The dashboard's **New Customer Analysis** page demonstrates how the
-trained system *could* score a single customer record that is not already
-in the pre-computed table — for example, to show a faculty reviewer the
-live inference path rather than only a static CSV. It uses the same saved
-preprocessor and saved CNN as (B), but scores a manually entered record
-on demand.
+**Score a new customer** (on Actionable targeting) scores one manually
+entered record on demand with the same saved preprocessor and both saved
+models. Scoring a test-set record through this path reproduces its row in
+`final_predictions.csv` (also covered by the tests).
 
-**All three remain academic-prototype outputs.** None is connected to a
-live bank CRM or a real, ongoing customer database — (A) and (B) work off
-a static, offline dataset, and (C) only proves the scoring path can run on
-any single row shaped like a UCI record.
+All three remain academic-prototype outputs; none is connected to a live
+bank system.
 
 ---
 
 ## 15. Dashboard
 
-Run with `streamlit run app/streamlit_app.py`. The dashboard is a
-**prototype** — it is not wired up to a live bank CRM. It follows a
-business-analysis hierarchy — **Overview → Campaign Drivers → Customer
-Segments → Actionable Targeting** — so someone unfamiliar with the project
-can go from "what's the conversion rate?" to "who should we target?" in
-four pages, followed by supporting pages for individual customer lookups
-and technical review.
+Start it with `python run.py` and open http://localhost:5000. It has four
+sections in a left rail (top tabs on phones), and one filter row shared by
+the first three.
 
-**Two distinct data sources power the dashboard, and every page states
-which one it uses:**
+**Filters** (Age group, Job, Education, Marital status, Housing loan,
+Personal loan, Campaign month, Previous outcome) are multi-select
+dropdowns. Active filters appear as removable chips. They apply to every
+KPI, chart and table on Executive overview, Campaign insights and
+Actionable targeting; Model performance always uses the full test set.
 
-- **Historical/observed** (`src/analytics.py::load_campaign_dataset`) —
-  the full 45,211-row dataset with real, actual campaign outcomes. Powers
-  the first three pages.
-- **Model-predicted** (`outputs/final_predictions.csv`) — CNN conversion
-  probabilities on the 9,043-row held-out test split. Powers Actionable
-  Targeting, Customer Lookup, and (via live inference) New Customer
-  Analysis.
+- **Executive overview** — a headline sentence with subscriptions,
+  customers and conversion rate for the current selection, and the change
+  versus all customers. Below it: contacts per customer, best job segment
+  and strongest month (both only from groups of 30+ customers), hot-lead
+  count, conversion rate by month, contact volume by month, and the
+  HOT / WARM / COLD split of the production model's scores.
+- **Campaign insights** — conversion rate by month, contacts in the
+  current campaign, previous outcome and call duration, plus a segment
+  explorer (Age group, Job, Education, Marital status, Housing loan,
+  Personal loan, Credit default). A dashed line marks the selection's
+  average. Groups under 30 customers are drawn faded with a dashed outline
+  and flagged in the tooltip, not hidden.
+- **Actionable targeting** — switch between **Gradient Boosting** and
+  **Random Forest** (the production model is marked "In use"). The KPI
+  strip (scored, hot, warm, cold, high fatigue) doubles as quick filters
+  for the table. Charts show the predicted-probability distribution with
+  the 40% / 70% thresholds and the recommended-action mix. The priority
+  customer table is paginated (25 rows), sortable (probability, age,
+  balance, contacts), searchable by record ID and filterable by lead
+  temperature and contact fatigue, with CSV export of the full filtered
+  list. Clicking a row opens the customer's profile, decision outputs and
+  both models' probabilities. **Score a new customer** opens a form with
+  all 16 inputs. Dropdown options come from the fitted preprocessor, and
+  the server validates every value.
+- **Model performance** — metric comparison (chart + table, best value
+  in bold), ROC curves with AUC, feature importance per model (one-hot
+  columns summed back to their input field), and confusion matrices at
+  the 0.5 threshold.
 
-Pages:
-
-- **Executive Overview** — top-line, honestly-denominated KPIs computed on
-  the (filtered) historical dataset: Customers Contacted, Subscriptions,
-  Conversion Rate, and Avg. Contacts per Customer, plus a
-  Contacted-vs-Subscribed chart and the best-performing job segment —
-  shown **only** if it has at least 30 customers (see §19's discussion of
-  small-sample handling via `MIN_RELIABLE_SAMPLE_SIZE`), otherwise the
-  page says so explicitly instead of highlighting an unreliable small
-  group.
-- **Campaign Drivers** — four rate-based charts computed on the historical
-  data: Subscription Rate by Month, by Number of Contacts, by Previous
-  Campaign Outcome, and by Last Call Duration. Titles describe the
-  business question ("Subscription Rate by X"), not just "distribution of
-  X". Every bar shows its sample size in the tooltip; bars below the
-  minimum reliable sample size are rendered at reduced opacity rather than
-  hidden or presented as equally trustworthy.
-- **Customer Segments** — a single selectable segment (Age Group, Job,
-  Education, Marital Status, Housing Loan, Personal Loan, or Credit
-  Default) at a time, shown as one conversion-rate bar chart plus an
-  expandable numbers table. Segments are not all auto-plotted at once, to
-  avoid an overwhelming wall of charts.
-- **Actionable Targeting** — explicitly labelled as **model-predicted**,
-  not historical. KPI cards (Customers Scored, Hot/Warm/Cold Leads, High
-  Contact Fatigue), a Recommended Action Mix chart, and the ranked Top
-  Priority Customers table (`customer_record_id`, attributes, conversion
-  probability, lead temperature, interaction pattern, contact fatigue,
-  recommendation), downloadable as CSV.
-- **Customer Lookup** — filter by lead temperature / contact fatigue and
-  select one test-set customer to see their full model-predicted profile.
-- **New Customer Analysis** — a form (age, job, marital status, education,
-  default, balance, housing, loan, contact type, day, month, duration,
-  campaign, pdays, previous, poutcome) that scores ONE manually entered
-  customer on demand using the SAME saved preprocessor
-  (`models/preprocessor.joblib`) and SAME saved 1D CNN
-  (`models/cnn_model.keras`) used everywhere else in this project — see
-  §14C and §16. Categorical dropdown options are read directly from the
-  fitted preprocessor's learned categories
-  (`src/preprocessing.py::get_categorical_options`), so no category is
-  invented separately from the training data. **No model is retrained
-  when the "Analyze Customer" button is clicked** — the saved artifacts
-  are only loaded (once, cached) and used for inference.
-- **Model Performance** — the same honest model-comparison table as §8,
-  deliberately placed near the end since this dashboard is built for
-  marketing decisions first and technical ML review second.
-- **About This Project** — plain-language description of the system and
-  its key assumptions (post-interaction use of `duration`,
-  project-generated Customer Record ID, prototype/no-live-CRM scope, the
-  historical-vs-new-customer distinction from §14).
-
-**Filters:** a sidebar filter panel (Age Group, Job, Education, Marital
-Status, Housing Loan, Personal Loan, Campaign Month, Previous Campaign
-Outcome) is shown on the first four (business-hierarchy) pages, and is
-applied consistently to whichever dataframe that page uses — every KPI,
-chart, and table on a page reflects the same filter selections, since the
-historical dataset and `final_predictions.csv` share the same underlying
-customer attribute columns.
-
-**Visual design:** the same fixed colour palette is used throughout every
-page, including the new ones — Deep Navy (`#19355F`) for headers/sidebar/
-structure, Teal (`#087A75`) for positive/primary chart and action
-elements, Warm Cream (`#D7C9AA`) for cards and neutral panels, and Deep
-Brick (`#7B2D26`) for warnings and HIGH contact fatigue. Charts avoid pie/
-donut/3D styles, rainbow palettes, and decorative visuals — every chart is
-a plain bar chart answering one stated business question, with the
-sample size in the tooltip.
+Every chart has hover tooltips, and most have a **Table** toggle that
+shows the exact numbers. Charts redraw on resize, and light and dark
+themes follow the operating system. The fixed palette: teal for
+conversion, blue / orange for Gradient Boosting / Random Forest, and
+brick / amber / slate for HOT / WARM / COLD.
 
 ---
 
@@ -558,154 +420,209 @@ supports **follow-up** decisions after a contact attempt has already
 happened, so having the most recent call's duration is legitimate
 information at that point. `duration` is therefore **kept**, not silently
 dropped or silently used — this assumption is documented here, in the
-notebook, and in the dashboard's "About This Project" page.
+dashboard footer and in the scoring form.
 
 If this system were changed into a **PRE-CALL** prediction system (deciding
 who to call for the very first time), `duration` would need to be dropped
 and the models retrained, since it would not be available at prediction
 time in that scenario.
 
-In the **New Customer Analysis** form (§15), this field is labelled
-**"Last call duration (seconds)"**, with the note:
+In the **Score a new customer** form (§15), this field is labelled
+**"Last call duration (s)"**, with the note:
 
-> "Duration is assumed to be known because this prototype supports
-> post-interaction follow-up decisions."
+> "Call duration is assumed known: this supports follow-up after a call."
 
 ---
 
 ## 17. Installation
 
+Requires **Python 3.10+** (verified with Python 3.13). From the project root:
+
 ```bash
-# from the project root
+python -m venv .venv
+# Windows:      .venv\Scripts\activate
+# macOS/Linux:  source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-Requires Python 3.9+ (tested with Python 3.12) and roughly 1-2 GB of free
-disk space for TensorFlow. Only relative paths are used throughout the
-project, so it can be extracted anywhere and run from its own root folder.
+Runtime dependencies are pandas, numpy, scikit-learn, joblib, matplotlib
+(training report images) and Flask. The frontend is plain
+HTML/CSS/JavaScript with no build step and no JS packages. It loads one web
+font from Google Fonts and falls back to system fonts when offline.
+
+For the tests:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m playwright install chromium     # only for the browser tests
+```
+
+All paths are resolved from the project folder (`src/config.py`), so
+commands work from any working directory.
 
 ---
 
 ## 18. How to run
 
-**Notebook:**
+**Start the dashboard:**
 
 ```bash
-cd notebooks
-jupyter notebook bank_marketing_cnn.ipynb
+python run.py                    # http://localhost:5000
+python run.py --port 8080        # another port
+python run.py --host 0.0.0.0     # reachable from other devices on your network
 ```
 
-Run all cells top to bottom. It loads/cleans the data, trains all models,
-plots results, runs the interaction-pattern and contact-fatigue analysis,
-and saves the final prediction tables + trained models into `../outputs/`
-and `../models/`.
+Startup loads the dataset, the preprocessor and both models once (about 1-2
+seconds), then prints the URL. Stop it with CTRL+C.
 
-**Scripted pipeline (recommended before running the dashboard):**
+**One-step launchers:** `run_project.bat` (Windows, double-click) and
+`run_project.sh` (macOS/Linux). They install dependencies, train only if
+`models/production_model.json` is missing, then start the server; the
+Windows one also opens the browser.
+
+**(Optional) retrain and regenerate artifacts** — only needed after
+changing code or data:
 
 ```bash
-python train_and_evaluate.py
+python train_and_evaluate.py                                   # picks the best ROC-AUC model
+python train_and_evaluate.py --production-model random_forest   # or force one
 ```
 
-Does the same work as the notebook without needing Jupyter, and regenerates
-all `outputs/` and `models/` files.
+| Folder | Files |
+|---|---|
+| `models/` | `preprocessor.joblib`, `feature_order.json`, `gradient_boosting.joblib`, `random_forest.joblib`, `production_model.json` |
+| `outputs/` | `model_comparison.csv`, `final_predictions.csv`, `top_priority_customers.csv`, `roc_curves.png`, `confusion_matrix.png/.csv`, `run_summary.json` |
 
-**Dashboard:**
+Restart `run.py` after retraining so the API loads the new artifacts.
+
+**Run the tests:**
 
 ```bash
-streamlit run app/streamlit_app.py
+python -m pytest -q
 ```
 
-Then open the printed local URL (usually `http://localhost:8501`).
+| File | Covers | Time |
+|---|---|---|
+| `tests/test_pipeline.py` | preprocessing, feature order, model loading, predictions, business rules, analytics | ~5 s |
+| `tests/test_api.py` | every endpoint, filters, pagination/sort/search, CSV export, predictions for both models, input validation, consistency with `final_predictions.csv` and `model_comparison.csv` | ~5 s |
+| `tests/test_frontend.py` | real server + headless Chromium: all sections, filters, chips, tooltips, table toggles, model switch, KPI quick filters, sort, paging, search, customer detail, CSV download, scoring form + validation, mobile layout, no JS errors | ~15 s |
 
-**Windows one-step launcher:** `run_project.bat` installs dependencies,
-runs `train_and_evaluate.py`, and launches the dashboard, in that order.
+`test_frontend.py` is skipped automatically if Playwright/Chromium are
+not installed.
+
+### API reference
+
+All endpoints return JSON except the CSV export. Filters are query
+parameters and may repeat (`?job=student&job=retired&month=mar`).
+`model` is `gradient_boosting` or `random_forest` (default: the
+production model). Invalid input returns HTTP 400 with `{"error": "..."}`.
+
+| Method & path | Returns |
+|---|---|
+| `GET /api/health` | status, startup time, production model |
+| `GET /api/meta` | filter options, models, segments, thresholds, form options/ranges |
+| `GET /api/overview` | historical KPIs, conversion by month, best job segment |
+| `GET /api/insights/drivers` | conversion by month / contacts / previous outcome / duration |
+| `GET /api/insights/segments?segment=job` | conversion by one customer segment |
+| `GET /api/targeting/summary?model=` | lead KPIs, recommendation mix, probability histogram |
+| `GET /api/targeting/customers?model=&temperature=&fatigue=&q=&sort=&order=&page=&page_size=` | one page of ranked customers (max 100 per page) |
+| `GET /api/targeting/export?...` | the same filtered list as CSV |
+| `GET /api/customers/<id>?model=` | one test-set customer, with both models' probabilities |
+| `POST /api/predict?model=` | score one customer (JSON body with all 16 input fields) |
+| `GET /api/models` | metrics, ROC points, confusion matrices, feature importances for both models |
 
 ---
 
 ## 19. Limitations
 
-- **Correlation, not causation**: the Campaign Drivers and Customer
-  Segments pages show *associations* between customer/campaign attributes
-  and observed conversion — e.g. retired customers or March campaigns
-  showing higher rates does not mean age or month *causes* subscription.
-  Confounding factors (e.g. call duration correlating with genuine
-  interest) are not controlled for in these simple rate breakdowns.
-- **Small samples**: any segment or driver combination with fewer than 30
-  customers (after filters are applied) is flagged as low-confidence in
-  the dashboard (reduced chart opacity, explicit caption) rather than
-  presented as a reliable finding — but with enough simultaneous filters
-  applied, even "reliable" groups can shrink, so filtered results should
-  still be read with the sample size in mind (shown in every chart
-  tooltip and in Customer Segments' "View underlying numbers" table).
-- **Prototype dashboard, not a live system**: predictions are pre-computed
-  for the dataset's test split; there is no real-time scoring of brand-new
-  customers or connection to an actual bank CRM.
-- **`duration` assumption**: as discussed in §16, this system assumes a
-  post-interaction use case. A version meant to score customers who have
-  *never* been contacted should drop `duration` and retrain.
-- **Interaction-pattern and contact-fatigue rules are simple and manually
-  designed**, not learned from data — they are meant to be transparent and
-  explainable, not statistically optimal.
-- **Customer Record ID is not a real identifier** — it is generated from
-  row position and would need to be replaced with a genuine customer key
-  in any real deployment.
-- **Historical data only**: the dataset covers a single Portuguese bank's
-  campaigns from 2008-2010; predictions may not generalise to other banks,
-  products, countries, or time periods without retraining.
-- **Class imbalance**: even with class weighting, the "yes" class (~12% of
-  data) is harder to predict precisely — Precision for the positive class
-  is moderate (~0.44) even though Recall and ROC-AUC are strong.
-- **No single model dominates**: as shown in §8, Random Forest, the 1D
-  CNN, and even the balanced Decision Tree each lead on a different metric.
-  The CNN is used for the final output mainly because it is the required
-  advanced model, not because it is unambiguously the best performer.
+- **Correlation, not causation**: Campaign insights shows *associations*
+  between attributes and observed conversion, not causes. Confounders are
+  not controlled for.
+- **Small samples**: groups with fewer than 30 customers (after filters)
+  are flagged as low-confidence (faded, dashed outline, tooltip note).
+- **Prototype, not a live system**: predictions cover the held-out test
+  split; the scoring form handles one manually entered record. There is
+  no CRM connection, authentication or database.
+- **Development server**: `run.py` uses Flask's built-in threaded server,
+  which is fine for local or classroom use. A shared deployment should run
+  `api.app:create_app()` behind a production WSGI server (e.g. gunicorn or
+  waitress) and add authentication.
+- **In-memory state**: each server process holds the dataset and both
+  models in memory (about 300 MB measured). Restart after retraining.
+- **`duration` assumption**: see §16. A pre-call version must drop
+  `duration` and retrain.
+- **Rules are manually designed**: interaction-pattern and contact-fatigue
+  rules are transparent, not statistically optimal.
+- **Customer Record ID is not a real identifier**; search is by that ID only.
+- **Historical data only**: one Portuguese bank, 2008-2010.
+- **Class imbalance**: positive-class precision is moderate (~0.44) even
+  though Recall and ROC-AUC are strong.
+- **Production model chosen on the test set**: the ROC-AUC comparison that
+  picks the production model uses the same test split the metrics are
+  reported on. With two closely matched models this has little effect,
+  but a separate validation split or cross-validation would be cleaner.
+- **Web font needs internet**: offline, the UI falls back to the system
+  font (layout unaffected).
 
 ---
 
 ## 20. Future improvements
 
-- Try feature-embedding based tabular deep learning (e.g. TabNet, entity
-  embeddings for categoricals) as an additional comparison model.
-- Hyperparameter-tune the CNN (filters, kernel size, learning rate) with a
-  proper search instead of a single hand-picked architecture.
-- Add SHAP or permutation feature importance to explain individual CNN
-  predictions, not just the overall interaction-pattern rules.
-- Extend the dashboard to accept a brand-new customer record and score it
-  live, once a real backend/database is available.
-- Track model drift by re-training on new campaign data over time.
-- Add authentication and a database backend for real deployment instead of
-  static CSV files.
+- Select the production model with cross-validation rather than the test
+  split.
+- Hyperparameter-tune both models with a proper search.
+- Per-customer explanations (e.g. SHAP) in the customer detail view.
+- Probability calibration (balanced weighting inflates raw probabilities;
+  the HOT/WARM/COLD thresholds currently assume that scale).
+- Authentication, a database and a production WSGI deployment.
+- Track model drift by retraining on new campaign data over time.
 
 ---
 
 ## 21. Project structure
 
 ```
-bank_marketing_project/
+IV-Proj/
 │
 ├── data/
-│   ├── bank-full.csv
+│   ├── bank-full.csv            (original dataset, read-only)
 │   └── README.md
 │
-├── notebooks/
-│   └── bank_marketing_cnn.ipynb
+├── src/                         (backend logic - single implementation)
+│   ├── config.py                (absolute project paths)
+│   ├── preprocessing.py         (cleaning, split, ColumnTransformer, feature order)
+│   ├── model.py                 (Gradient Boosting + Random Forest, evaluation, persistence)
+│   ├── interaction_analysis.py  (interaction-pattern rules)
+│   ├── prediction.py            (lead temperature, contact fatigue, recommendations, scoring)
+│   └── analytics.py             (historical KPIs, segmentation, filters)
 │
-├── src/
-│   ├── preprocessing.py
-│   ├── model.py
-│   ├── interaction_analysis.py
-│   ├── prediction.py
-│   └── analytics.py
+├── api/
+│   ├── app.py                   (Flask routes, error handling, static file serving)
+│   └── service.py               (load-once data/model cache, filtering, memoised aggregates)
 │
-├── app/
-│   └── streamlit_app.py
+├── frontend/                    (no build step)
+│   ├── index.html
+│   ├── css/styles.css
+│   └── js/
+│       ├── charts.js            (dependency-free SVG/HTML charts)
+│       └── app.js               (routing, filters, API calls, sections)
 │
-├── models/            (generated)
-├── outputs/            (generated)
+├── tests/
+│   ├── test_pipeline.py
+│   ├── test_api.py
+│   └── test_frontend.py
 │
-├── train_and_evaluate.py
+├── models/                      (generated by train_and_evaluate.py)
+├── outputs/                     (generated by train_and_evaluate.py)
+│
+├── run.py                       (start the dashboard)
+├── train_and_evaluate.py        (train + evaluate both models)
 ├── requirements.txt
+├── requirements-dev.txt
+├── pytest.ini
 ├── README.md
 ├── PROJECT_OVERVIEW.md
-└── run_project.bat
+├── CHANGELOG.md
+├── run_project.bat
+└── run_project.sh
 ```

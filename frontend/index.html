@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marketing Decision Support</title>
+  <meta name="description" content="Bank term-deposit campaign analysis and lead targeting.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@85..100,400..700&display=swap">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2313233A'/%3E%3Cpath d='M8 22V14M14 22V10M20 22V16M26 22V8' stroke='%2334B3A6' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="shell">
+  <nav class="rail" aria-label="Sections">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" class="brand__tile"/><path d="M8 22V14M14 22V10M20 22V16M26 22V8" class="brand__bars"/></svg>
+      <span>Marketing <br>Decision Support</span>
+    </div>
+    <ul class="nav">
+      <li><a href="#overview" data-nav="overview">Executive overview</a></li>
+      <li><a href="#insights" data-nav="insights">Campaign insights</a></li>
+      <li><a href="#targeting" data-nav="targeting">Actionable targeting</a></li>
+      <li><a href="#models" data-nav="models">Model performance</a></li>
+    </ul>
+    <p class="rail__note" id="rail-note">Loading…</p>
+  </nav>
+
+  <main id="main" tabindex="-1">
+    <header class="page-head">
+      <h1 id="page-title">Executive overview</h1>
+      <p id="page-source" class="page-source"></p>
+    </header>
+
+    <div class="filterbar" id="filterbar" aria-label="Customer filters">
+      <div class="filterbar__controls" id="filter-controls"></div>
+      <div class="filterbar__chips" id="filter-chips" aria-live="polite"></div>
+    </div>
+
+    <div id="global-error" class="banner banner--error" hidden></div>
+
+    <!-- Executive overview -->
+    <section id="section-overview" class="section" data-section="overview" hidden>
+      <p class="hero" id="hero" aria-live="polite"></p>
+      <div class="kpis" id="overview-kpis"></div>
+      <div class="grid grid--2">
+        <figure class="card">
+          <figcaption class="card__head"><h2>Conversion rate by month</h2><button class="link-btn" data-table-toggle="ov-month">Table</button></figcaption>
+          <div class="chart" id="ov-month"></div>
+        </figure>
+        <figure class="card">
+          <figcaption class="card__head"><h2>Customers contacted by month</h2><button class="link-btn" data-table-toggle="ov-volume">Table</button></figcaption>
+          <div class="chart" id="ov-volume"></div>
+        </figure>
+      </div>
+      <figure class="card">
+        <figcaption class="card__head">
+          <h2>Who to call next</h2>
+          <a class="link-btn" href="#targeting">Open targeting</a>
+        </figcaption>
+        <p class="card__sub" id="ov-leads-sub"></p>
+        <div id="ov-leads" class="leadbar"></div>
+      </figure>
+    </section>
+
+    <!-- Campaign insights -->
+    <section id="section-insights" class="section" data-section="insights" hidden>
+      <div class="grid grid--2" id="drivers"></div>
+      <figure class="card">
+        <figcaption class="card__head">
+          <h2>Conversion by customer segment</h2>
+          <button class="link-btn" data-table-toggle="seg-chart">Table</button>
+        </figcaption>
+        <div class="segmented" role="radiogroup" aria-label="Segment by" id="segment-picker"></div>
+        <div class="chart" id="seg-chart"></div>
+      </figure>
+      <p class="footnote" id="insights-note"></p>
+    </section>
+
+    <!-- Actionable targeting -->
+    <section id="section-targeting" class="section" data-section="targeting" hidden>
+      <div class="toolbar">
+        <div class="segmented" role="radiogroup" aria-label="Scoring model" id="model-picker"></div>
+        <button class="btn btn--primary" id="open-score">Score a new customer</button>
+      </div>
+      <div class="kpis kpis--5" id="tg-kpis"></div>
+      <div class="grid grid--2">
+        <figure class="card">
+          <figcaption class="card__head"><h2>Predicted conversion probability</h2><button class="link-btn" data-table-toggle="tg-hist">Table</button></figcaption>
+          <div class="chart" id="tg-hist"></div>
+        </figure>
+        <figure class="card">
+          <figcaption class="card__head"><h2>Recommended actions</h2></figcaption>
+          <div class="chart" id="tg-recs"></div>
+        </figure>
+      </div>
+      <div class="card">
+        <div class="card__head">
+          <h2>Priority customers <span class="count" id="tg-count"></span></h2>
+          <button class="btn" id="export-csv">Download CSV</button>
+        </div>
+        <form class="table-controls" id="table-controls" role="search" onsubmit="return false">
+          <label>Record ID <input type="search" inputmode="numeric" id="tc-q" placeholder="e.g. 1024" autocomplete="off"></label>
+          <label>Lead temperature
+            <select id="tc-temp"><option value="">All</option><option>HOT</option><option>WARM</option><option>COLD</option></select>
+          </label>
+          <label>Contact fatigue
+            <select id="tc-fatigue"><option value="">All</option><option>LOW</option><option>MEDIUM</option><option>HIGH</option></select>
+          </label>
+        </form>
+        <div class="table-wrap">
+          <table class="data-table" id="customer-table">
+            <thead><tr>
+              <th scope="col">ID</th>
+              <th scope="col" class="num"><button class="sort" data-sort="age">Age</button></th>
+              <th scope="col">Job</th>
+              <th scope="col" class="num"><button class="sort" data-sort="balance">Balance</button></th>
+              <th scope="col" class="num"><button class="sort" data-sort="campaign">Contacts</button></th>
+              <th scope="col">Previous outcome</th>
+              <th scope="col" class="num"><button class="sort" data-sort="probability">Probability</button></th>
+              <th scope="col">Lead</th>
+              <th scope="col">Fatigue</th>
+              <th scope="col" class="wide">Recommendation</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pager" id="pager"></div>
+      </div>
+    </section>
+
+    <!-- Model performance -->
+    <section id="section-models" class="section" data-section="models" hidden>
+      <p class="lede" id="models-lede"></p>
+      <div class="card">
+        <div class="card__head"><h2>Test-set metrics</h2><div class="legend" id="models-legend"></div></div>
+        <div class="chart" id="md-metrics"></div>
+        <div id="md-table"></div>
+      </div>
+      <div class="grid grid--2">
+        <figure class="card">
+          <figcaption class="card__head"><h2>ROC curves</h2></figcaption>
+          <div class="chart" id="md-roc"></div>
+        </figure>
+        <figure class="card">
+          <figcaption class="card__head"><h2>What drives each model</h2></figcaption>
+          <p class="card__sub">Share of total feature importance, one-hot columns summed back to their input field.</p>
+          <div class="chart" id="md-importance"></div>
+        </figure>
+      </div>
+      <div class="card">
+        <div class="card__head"><h2>Confusion matrices at a 0.5 threshold</h2></div>
+        <div class="grid grid--2" id="md-confusion"></div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <p>Prototype on the UCI Bank Marketing dataset (Moro, Cortez &amp; Rita, 2014); not connected to a live CRM. Call duration is only known after a call, so predictions support follow-up decisions, not first-contact selection. Record IDs are generated by this project.</p>
+    </footer>
+  </main>
+</div>
+
+<dialog id="customer-dialog" class="dialog" aria-labelledby="cd-title">
+  <form method="dialog" class="dialog__close"><button aria-label="Close">×</button></form>
+  <div id="customer-detail"></div>
+</dialog>
+
+<dialog id="score-dialog" class="dialog dialog--wide" aria-labelledby="sd-title">
+  <form method="dialog" class="dialog__close"><button aria-label="Close">×</button></form>
+  <h2 id="sd-title">Score a new customer</h2>
+  <p class="card__sub">Uses the saved preprocessor and both saved models. Nothing is retrained.</p>
+  <form id="score-form" class="score-form" novalidate></form>
+  <div id="score-result" aria-live="polite"></div>
+</dialog>
+
+<script src="js/charts.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

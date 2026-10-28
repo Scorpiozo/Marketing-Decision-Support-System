@@ -1,5 +1,5 @@
 {
-  "description": "Fixed, reproducible order of engineered features fed to every model (Logistic Regression, Decision Tree, Random Forest, and the 1D CNN). The CNN reshapes this vector from (n_features,) to (n_features, 1) in exactly this order.",
+  "description": "Fixed, reproducible order of engineered features fed to every model (Gradient Boosting and Random Forest). Produced by models/preprocessor.joblib; new records must be transformed by that same preprocessor so columns arrive in exactly this order.",
   "feature_groups": {
     "1_numerical_customer_features": [
       "age",

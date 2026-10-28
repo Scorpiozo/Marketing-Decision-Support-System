@@ -1,0 +1,15 @@
+{
+  "model_key": "gradient_boosting",
+  "display_name": "Gradient Boosting",
+  "filename": "gradient_boosting.joblib",
+  "selected_by": "highest test ROC-AUC",
+  "test_metrics": {
+    "Model": "Gradient Boosting",
+    "Accuracy": 0.8581,
+    "Precision": 0.4451,
+    "Recall": 0.862,
+    "F1-score": 0.5871,
+    "ROC-AUC": 0.9299,
+    "PR-AUC": 0.6213
+  }
+}

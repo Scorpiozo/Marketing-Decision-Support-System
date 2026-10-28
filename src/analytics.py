@@ -1,6 +1,6 @@
-import numpy as np
 import pandas as pd
 
+from src.config import DATA_PATH
 from src.preprocessing import load_raw_data, clean_data
 
 MIN_RELIABLE_SAMPLE_SIZE = 30
@@ -28,13 +28,16 @@ SEGMENT_COLUMNS = {
 }
 
 
-def load_campaign_dataset(data_path="data/bank-full.csv"):
-    df = load_raw_data(data_path)
-    df = clean_data(df)
-    df = df.copy()
+def add_age_group(age_series):
+    """Bin ages into the dashboard's age groups (shared by all pages)."""
+    return pd.cut(age_series, bins=AGE_BINS, labels=AGE_LABELS)
+
+
+def load_campaign_dataset(data_path=DATA_PATH):
+    df = clean_data(load_raw_data(data_path))  # clean_data already returns a copy
 
     df["converted"] = (df["y"].astype(str).str.lower() == "yes").astype(int)
-    df["age_group"] = pd.cut(df["age"], bins=AGE_BINS, labels=AGE_LABELS)
+    df["age_group"] = add_age_group(df["age"])
     df["contacts_bucket"] = pd.cut(
         df["campaign"], bins=CAMPAIGN_BINS, labels=CAMPAIGN_LABELS
     )

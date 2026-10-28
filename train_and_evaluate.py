@@ -1,69 +1,61 @@
 """
 train_and_evaluate.py
- 
-End-to-end script that:
-    1. Loads and preprocesses the Bank Marketing dataset
-    2. Trains baseline models (Logistic Regression, Decision Tree, Random Forest)
-    3. Trains the 1D CNN
-    4. Compares all models on a consistent test set
-    5. Saves all trained models + the preprocessor to models/
-    6. Builds the final prediction dataframe + Top Priority Customers table
-    7. Saves outputs (metrics, plots, CSVs) to outputs/
 
-Run this from the project root:
+End-to-end script that:
+    1. Loads and preprocesses the Bank Marketing dataset (data/bank-full.csv is read, never modified)
+    2. Trains the two supported models: Gradient Boosting and Random Forest
+    3. Compares them on the same held-out test set
+    4. Saves both models, the preprocessor, the feature order and the
+       production-model selection to models/
+    5. Builds the final prediction dataframe + Top Priority Customers table
+       with the production model
+    6. Saves outputs (metrics, plots, CSVs, run summary) to outputs/
+
+Run from anywhere (paths are resolved relative to this file):
     python train_and_evaluate.py
+    python train_and_evaluate.py --production-model random_forest
 """
 
+import argparse
+import json
 import os
 import sys
-import json
-import numpy as np
-import pandas as pd
+
 import matplotlib
 matplotlib.use("Agg")  # headless backend so this runs without a display
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from sklearn.metrics import roc_curve
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from src import preprocessing as prep
+from src import config
 from src import model as mdl
+from src import preprocessing as prep
 from src.prediction import build_prediction_dataframe, get_top_priority_customers
 
-OUTPUTS_DIR = "outputs"
-MODELS_DIR = "models"
+SELECTION_METRIC = "ROC-AUC"
 
 
-def ensure_dirs():
-    os.makedirs(OUTPUTS_DIR, exist_ok=True)
-    os.makedirs(MODELS_DIR, exist_ok=True)
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description="Train and evaluate the bank marketing models.")
+    parser.add_argument(
+        "--production-model",
+        choices=["auto"] + list(mdl.MODEL_REGISTRY),
+        default="auto",
+        help=(
+            "Model used to generate the decision-support outputs. "
+            f"'auto' (default) picks the model with the highest test {SELECTION_METRIC}."
+        ),
+    )
+    return parser.parse_args(argv)
 
 
-def plot_cnn_history(history, out_path):
-    hist = history.history
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-
-    axes[0].plot(hist["loss"], label="train")
-    axes[0].plot(hist["val_loss"], label="validation")
-    axes[0].set_title("CNN Loss")
-    axes[0].set_xlabel("Epoch")
-    axes[0].legend()
-
-    axes[1].plot(hist["accuracy"], label="train")
-    axes[1].plot(hist["val_accuracy"], label="validation")
-    axes[1].set_title("CNN Accuracy")
-    axes[1].set_xlabel("Epoch")
-    axes[1].legend()
-
-    if "auc" in hist:
-        axes[2].plot(hist["auc"], label="train")
-        axes[2].plot(hist["val_auc"], label="validation")
-        axes[2].set_title("CNN AUC")
-        axes[2].set_xlabel("Epoch")
-        axes[2].legend()
-
-    plt.tight_layout()
-    plt.savefig(out_path, dpi=120)
-    plt.close(fig)
+def section(title):
+    print("\n" + "=" * 70)
+    print(title)
+    print("=" * 70)
 
 
 def plot_confusion_matrix(cm, model_name, out_path):
@@ -77,165 +69,123 @@ def plot_confusion_matrix(cm, model_name, out_path):
     for i in range(2):
         for j in range(2):
             ax.text(j, i, str(cm[i, j]), ha="center", va="center",
-                     color="white" if cm[i, j] > cm.max() / 2 else "black")
+                    color="white" if cm[i, j] > cm.max() / 2 else "black")
     fig.colorbar(im)
     plt.tight_layout()
     plt.savefig(out_path, dpi=120)
     plt.close(fig)
 
 
-def main():
-    ensure_dirs()
-    print("=" * 70)
-    print("STEP 1: Load & preprocess data")
-    print("=" * 70)
-    data = prep.load_and_prepare(data_path="data/bank-full.csv")
-    X_train_proc, X_test_proc = data["X_train_proc"], data["X_test_proc"]
-    y_train, y_test = data["y_train"].values, data["y_test"].values
-    prep.save_preprocessor(data["preprocessor"], path=f"{MODELS_DIR}/preprocessor.joblib")
-    prep.save_feature_order(data["preprocessor"], path=f"{MODELS_DIR}/feature_order.json")
-    print("Train:", X_train_proc.shape, " Test:", X_test_proc.shape)
-    print("Positive rate (train):", round(y_train.mean(), 4))
-
-    results = []
-    roc_data = {}
-
-    #
-    # STEP 2: Baseline models
-    #
-    print("\n" + "=" * 70)
-    print("STEP 2: Train baseline models")
-    print("=" * 70)
-
-    print("Training Logistic Regression...")
-    log_model = mdl.train_logistic_regression(X_train_proc, y_train)
-    y_prob_log = log_model.predict_proba(X_test_proc)[:, 1]
-    y_pred_log = (y_prob_log >= 0.5).astype(int)
-    results.append(mdl.evaluate_model(y_test, y_pred_log, y_prob_log, "Logistic Regression"))
-    mdl.save_sklearn_model(log_model, f"{MODELS_DIR}/logistic_regression.joblib")
-
-    print("Training Decision Tree (balanced)...")
-    dt_model = mdl.train_decision_tree(X_train_proc, y_train, balanced=True)
-    y_prob_dt = dt_model.predict_proba(X_test_proc)[:, 1]
-    y_pred_dt = (y_prob_dt >= 0.5).astype(int)
-    results.append(mdl.evaluate_model(y_test, y_pred_dt, y_prob_dt, "Decision Tree (balanced)"))
-    mdl.save_sklearn_model(dt_model, f"{MODELS_DIR}/decision_tree.joblib")
-
-    print("Training Random Forest...")
-    rf_model = mdl.train_random_forest(X_train_proc, y_train)
-    y_prob_rf = rf_model.predict_proba(X_test_proc)[:, 1]
-    y_pred_rf = (y_prob_rf >= 0.5).astype(int)
-    results.append(mdl.evaluate_model(y_test, y_pred_rf, y_prob_rf, "Random Forest"))
-    mdl.save_sklearn_model(rf_model, f"{MODELS_DIR}/random_forest.joblib")
-
-    #
-    # STEP 3: 1D CNN
-    #
-    print("\n" + "=" * 70)
-    print("STEP 3: Train 1D CNN")
-    print("=" * 70)
-
-    cnn_model, history = mdl.train_cnn_model(
-        X_train_proc, y_train, epochs=50, batch_size=256, verbose=2
-    )
-    y_prob_cnn = mdl.cnn_predict_proba(cnn_model, X_test_proc)
-    y_pred_cnn = (y_prob_cnn >= 0.5).astype(int)
-    results.append(mdl.evaluate_model(y_test, y_pred_cnn, y_prob_cnn, "1D CNN"))
-    mdl.save_cnn_model(cnn_model, f"{MODELS_DIR}/cnn_model.keras")
-
-    plot_cnn_history(history, f"{OUTPUTS_DIR}/cnn_training_history.png")
-
-    #
-    # STEP 4: Model comparison
-    #
-    print("\n" + "=" * 70)
-    print("STEP 4: Model comparison")
-    print("=" * 70)
-    comparison_df = pd.DataFrame(results)
-    comparison_df = comparison_df.round(4)
-    print(comparison_df.to_string(index=False))
-    comparison_df.to_csv(f"{OUTPUTS_DIR}/model_comparison.csv", index=False)
-
-    # Confusion matrix for the CNN (the model used downstream for the DSS)
-    cm = mdl.get_confusion_matrix(y_test, y_pred_cnn)
-    plot_confusion_matrix(cm, "1D CNN", f"{OUTPUTS_DIR}/cnn_confusion_matrix.png")
-    np.savetxt(f"{OUTPUTS_DIR}/cnn_confusion_matrix.csv", cm, fmt="%d", delimiter=",")
-
-    # ROC curves for all models on one plot
-    from sklearn.metrics import roc_curve
+def plot_roc_curves(y_test, probabilities, out_path):
     fig, ax = plt.subplots(figsize=(6, 6))
-    for name, y_prob in [
-        ("Logistic Regression", y_prob_log),
-        ("Decision Tree", y_prob_dt),
-        ("Random Forest", y_prob_rf),
-        ("1D CNN", y_prob_cnn),
-    ]:
+    for name, y_prob in probabilities.items():
         fpr, tpr, _ = roc_curve(y_test, y_prob)
         ax.plot(fpr, tpr, label=name)
     ax.plot([0, 1], [0, 1], "--", color="gray")
     ax.set_xlabel("False Positive Rate")
     ax.set_ylabel("True Positive Rate")
-    ax.set_title("ROC Curves - All Models")
+    ax.set_title("ROC Curves")
     ax.legend()
     plt.tight_layout()
-    plt.savefig(f"{OUTPUTS_DIR}/roc_curves_all_models.png", dpi=120)
+    plt.savefig(out_path, dpi=120)
     plt.close(fig)
 
-    #
-    # STEP 5: Final Marketing Decision Support System outputs
-    #
-    print("\n" + "=" * 70)
-    print("STEP 5: Build final prediction dataframe (using CNN probabilities)")
-    print("=" * 70)
-    best_by_roc_auc = comparison_df.loc[comparison_df["ROC-AUC"].idxmax(), "Model"]
-    best_by_recall = comparison_df.loc[comparison_df["Recall"].idxmax(), "Model"]
-    best_by_f1 = comparison_df.loc[comparison_df["F1-score"].idxmax(), "Model"]
-    print(f"Best model by ROC-AUC:  {best_by_roc_auc}")
-    print(f"Best model by Recall:   {best_by_recall}")
-    print(f"Best model by F1-score: {best_by_f1}")
-    print(
-        "NOTE: The table above is the honest, unedited comparison for this "
-        "run - whichever model tops each metric is reported as-is, and it "
-        "will not always be the CNN. The 1D CNN is still used to generate "
-        "the final decision-support outputs below because it is the "
-        "project's required advanced deep-learning model, not because it "
-        "is guaranteed to be the top performer on every metric. See "
-        "README.md section 8 for the full discussion of this trade-off."
-    )
 
+def main(argv=None):
+    args = parse_args(argv)
+    os.makedirs(config.OUTPUTS_DIR, exist_ok=True)
+    os.makedirs(config.MODELS_DIR, exist_ok=True)
+
+    section("STEP 1: Load & preprocess data")
+    data = prep.load_and_prepare(data_path=config.DATA_PATH)
+    X_train_proc, X_test_proc = data["X_train_proc"], data["X_test_proc"]
+    y_train, y_test = data["y_train"].values, data["y_test"].values
+    prep.save_preprocessor(data["preprocessor"])
+    prep.save_feature_order(data["preprocessor"])
+    print("Train:", X_train_proc.shape, " Test:", X_test_proc.shape)
+    print("Positive rate (train):", round(y_train.mean(), 4))
+
+    section("STEP 2: Train models")
+    results = {}
+    probabilities = {}
+    predictions = {}
+    for key, spec in mdl.MODEL_REGISTRY.items():
+        name = spec["display_name"]
+        print(f"Training {name}...")
+        model = spec["trainer"](X_train_proc, y_train)
+        y_prob = mdl.predict_proba(model, X_test_proc)
+        y_pred = (y_prob >= mdl.DECISION_THRESHOLD).astype(int)
+        results[key] = mdl.evaluate_model(y_test, y_pred, y_prob, name)
+        probabilities[key] = y_prob
+        predictions[key] = y_pred
+        print("  saved ->", mdl.save_model(model, key))
+
+    section("STEP 3: Model comparison")
+    comparison_df = pd.DataFrame(list(results.values())).round(4)
+    print(comparison_df.to_string(index=False))
+    comparison_df.to_csv(config.MODEL_COMPARISON_PATH, index=False)
+
+    best = {
+        metric: comparison_df.loc[comparison_df[metric].idxmax(), "Model"]
+        for metric in ["ROC-AUC", "Recall", "F1-score"]
+    }
+    for metric, name in best.items():
+        print(f"Best model by {metric}: {name}")
+
+    if args.production_model == "auto":
+        production_key = max(results, key=lambda k: results[k][SELECTION_METRIC])
+        selected_by = f"highest test {SELECTION_METRIC}"
+    else:
+        production_key = args.production_model
+        selected_by = "manual (--production-model)"
+    production_name = mdl.display_name(production_key)
+    info = mdl.save_production_model_info(production_key, selected_by, results[production_key])
+    print(f"Production model: {production_name} ({selected_by})")
+
+    plot_roc_curves(
+        y_test,
+        {mdl.display_name(k): p for k, p in probabilities.items()},
+        config.ROC_CURVES_PATH,
+    )
+    cm = mdl.get_confusion_matrix(y_test, predictions[production_key])
+    plot_confusion_matrix(cm, production_name, config.CONFUSION_MATRIX_PNG_PATH)
+    np.savetxt(config.CONFUSION_MATRIX_CSV_PATH, cm, fmt="%d", delimiter=",")
+
+    section(f"STEP 4: Build decision-support outputs ({production_name} probabilities)")
     X_test_raw = data["X_test"].reset_index(drop=True)
-    prediction_df = build_prediction_dataframe(X_test_raw, y_prob_cnn)
-    prediction_df.to_csv(f"{OUTPUTS_DIR}/final_predictions.csv", index=False)
+    prediction_df = build_prediction_dataframe(X_test_raw, probabilities[production_key])
+    prediction_df.to_csv(config.PREDICTIONS_PATH, index=False)
 
     top_50 = get_top_priority_customers(prediction_df, top_n=50)
-    top_50.to_csv(f"{OUTPUTS_DIR}/top_priority_customers.csv", index=False)
+    top_50.to_csv(config.TOP_PRIORITY_PATH, index=False)
 
     print("Lead temperature distribution:")
     print(prediction_df["lead_temperature"].value_counts())
     print("\nInteraction pattern distribution:")
     print(prediction_df["interaction_pattern"].value_counts())
-
     print(f"\nSaved final_predictions.csv ({len(prediction_df)} rows) and "
-          f"top_priority_customers.csv (top {len(top_50)}) to {OUTPUTS_DIR}/")
+          f"top_priority_customers.csv (top {len(top_50)}) to {config.OUTPUTS_DIR}")
 
-    # Save a small run summary
     summary = {
         "n_train": int(X_train_proc.shape[0]),
         "n_test": int(X_test_proc.shape[0]),
         "n_features_after_encoding": int(X_train_proc.shape[1]),
-        "best_model_by_roc_auc": best_by_roc_auc,
-        "best_model_by_recall": best_by_recall,
-        "best_model_by_f1": best_by_f1,
-        "production_model_used_for_final_output": "1D CNN",
-        "cnn_test_roc_auc": float(results[-1]["ROC-AUC"]),
+        "models_trained": [mdl.display_name(k) for k in mdl.MODEL_REGISTRY],
+        "best_model_by_roc_auc": best["ROC-AUC"],
+        "best_model_by_recall": best["Recall"],
+        "best_model_by_f1": best["F1-score"],
+        "production_model_used_for_final_output": production_name,
+        "production_model_selected_by": selected_by,
+        "production_model_test_roc_auc": info["test_metrics"]["ROC-AUC"],
         "lead_temperature_counts": prediction_df["lead_temperature"].value_counts().to_dict(),
         "interaction_pattern_counts": prediction_df["interaction_pattern"].value_counts().to_dict(),
         "contact_fatigue_counts": prediction_df["contact_fatigue"].value_counts().to_dict(),
     }
-    with open(f"{OUTPUTS_DIR}/run_summary.json", "w") as f:
+    with open(config.RUN_SUMMARY_PATH, "w") as f:
         json.dump(summary, f, indent=2)
 
     print("\nAll done. See the outputs/ folder for saved artifacts.")
+    return summary
 
 
 if __name__ == "__main__":

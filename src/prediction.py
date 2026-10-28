@@ -1,13 +1,15 @@
 import pandas as pd
 
 from src.interaction_analysis import add_interaction_patterns, classify_interaction_pattern
+from src.model import predict_proba
+from src.preprocessing import transform_new_records
 
 
 HOT_THRESHOLD = 0.70
 WARM_THRESHOLD = 0.40
 
-FATIGUE_LOW_MAX = 2    
-FATIGUE_MEDIUM_MAX = 4                             
+FATIGUE_LOW_MAX = 2
+FATIGUE_MEDIUM_MAX = 4
 
 
 def classify_lead_temperature(probability):
@@ -94,11 +96,15 @@ def get_top_priority_customers(prediction_df, top_n=50):
     return prediction_df.head(top_n).reset_index(drop=True)
 
 
-def predict_single_customer(customer_dict, preprocessor, cnn_model, reshape_fn):
+def predict_single_customer(customer_dict, preprocessor, model):
+    """Score one raw customer record with the saved preprocessor + model.
+
+    ``model`` is any fitted estimator exposing ``predict_proba`` (the
+    production Gradient Boosting or Random Forest model).
+    """
     single_df = pd.DataFrame([customer_dict])
-    X_proc = preprocessor.transform(single_df)
-    X_cnn = reshape_fn(X_proc)
-    prob = float(cnn_model.predict(X_cnn, verbose=0).ravel()[0])
+    X_proc = transform_new_records(single_df, preprocessor)
+    prob = float(predict_proba(model, X_proc)[0])
 
     lead_temp = classify_lead_temperature(prob)
     pattern = classify_interaction_pattern(customer_dict)

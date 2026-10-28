@@ -12,9 +12,6 @@ env/
 .vscode/
 .idea/
 
-# Streamlit
-.streamlit/secrets.toml
-
 # Environment files
 .env
 .env.*
@@ -30,3 +27,6 @@ Thumbs.db
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Test artifacts
+test-results/

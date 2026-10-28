@@ -8,56 +8,52 @@ in order: *How did the campaign perform? Who converts? What factors
 matter? Who should the bank target next, and what should they do?* —
 built for a college project, not connected to a real bank's live systems.
 
-## The dashboard's four core pages
+## The dashboard's four sections
 
-1. **Executive Overview** — top-line campaign numbers: how many customers
-   were contacted, how many subscribed, the overall conversion rate, and
-   average contacts per customer — all computed directly from the real,
-   historical dataset (no model involved).
-2. **Campaign Drivers** — which campaign factors go with higher
-   conversion: the month contacted, how many times a customer was
-   contacted, the previous campaign's outcome, and the last call's
-   duration. Shown as conversion-rate charts, not raw counts.
-3. **Customer Segments** — which customer characteristics (age group, job,
-   education, marital status, housing loan, personal loan, credit
-   default) go with higher conversion. You pick one characteristic at a
-   time so the page isn't a wall of charts.
-4. **Actionable Targeting** — turns the analysis into action: which
-   customers the model thinks are most likely to convert, ranked and
-   ready to prioritize, with a suggested next step for each.
+It runs in a web browser (`python run.py`, then open http://localhost:5000).
 
-A sidebar lets you filter all four pages at once (by age group, job,
-education, marital status, housing/personal loan, campaign month, and
-previous outcome) so every number on screen reflects the same slice of
-customers.
+1. **Executive overview** — one sentence with the headline result (how
+   many contacted customers subscribed, and the conversion rate), plus a
+   few supporting numbers, monthly charts and a snapshot of how many
+   customers the model rates hot, warm or cold.
+2. **Campaign insights** — which campaign factors (month, number of
+   contacts, previous outcome, call duration) and which customer
+   characteristics (age group, job, education, marital status, loans,
+   credit default) go with higher conversion. You pick one customer
+   characteristic at a time, so the page isn't a wall of charts.
+3. **Actionable targeting** — turns the analysis into action: customers
+   ranked by how likely the model thinks they are to convert, each with a
+   suggested next step. You can click any customer for their full
+   profile, switch between the two models, download the list, or score a
+   customer you type in yourself.
+4. **Model performance** — the technical comparison of the two models,
+   for anyone who wants to check the numbers behind the scenes.
 
-Three supporting pages round things out: **Customer Lookup** (look up one
-customer's full profile), **New Customer Analysis** (score a customer you
-type in yourself, live), and **Model Performance** (the technical
-comparison between models, for anyone who wants to check the numbers
-behind the scenes).
+One row of filters (age group, job, education, marital status,
+housing/personal loan, campaign month, previous outcome) applies to the
+first three sections at once, so every number on screen reflects the same
+slice of customers.
 
 ## Two different kinds of number — and why the distinction matters
 
 This is the most important thing to understand about the dashboard:
 
-- **Historical / observed** (Executive Overview, Campaign Drivers,
-  Customer Segments): these numbers come straight from what actually
+- **Historical / observed** (Executive overview, Campaign insights): these numbers come straight from what actually
   happened to all 45,211 real customers in the dataset. "43% of customers
   contacted in March subscribed" is a fact about the past — not a
   prediction, and not proof that calling in March *causes* people to
   subscribe. Other things (like who tends to get called in March) could
   explain part of that pattern too.
-- **Model-predicted** (Actionable Targeting, Customer Lookup, New Customer
-  Analysis): these numbers are the trained CNN's *estimate* for a specific
+- **Model-predicted** (Actionable targeting, and the lead snapshot on the
+  overview): these numbers are the trained model's *estimate* for a specific
   customer — "78% conversion probability" is a guess, not a guarantee, and
   it's only shown for customers the model was tested on (or one you type
   in yourself), not the customers it trained on.
 
-The dashboard labels every page with which of these two it's showing, so
+The dashboard labels every section with which of these two it's showing, so
 the two are never presented as the same thing.
 
-## What comes out, per customer (Actionable Targeting / Customer Lookup / New Customer Analysis)
+## What comes out, per customer (Actionable targeting)
 
 1. **Conversion probability** — a percentage chance they'll subscribe to a
    term deposit (the only number that actually comes from the trained
@@ -76,34 +72,20 @@ Plus a ranked list of scored customers (using a project-generated Customer
 Record ID, since the UCI dataset has no real customer ID), and a Top
 Priority list of the ones most worth calling first.
 
-## What the CNN does
+## Where the probability comes from
 
-The probability comes from a **1D Convolutional Neural Network**. Normally
-CNNs look at images — but here, each customer's information is first
-converted into a list of numbers (an "engineered feature representation"),
-in a **fixed, documented order** (numerical customer features, then
-customer categorical features, then campaign/contact features — saved to
-`models/feature_order.json` so it can always be checked), and the CNN
-slides small filters across that list the same way it would slide filters
-across a row of pixels. This lets it pick up on useful combinations of
-nearby features instead of looking at each one in isolation.
+The probability comes from one of two tree-based machine-learning models,
+both trained on the same data: **Gradient Boosting** (many small decision
+trees built one after another, each fixing the previous ones' mistakes)
+and **Random Forest** (many independent decision trees that vote). Each
+customer's information is first converted into a fixed list of 51 numbers
+in a documented order (saved to `models/feature_order.json`).
 
-**This is a tabular-data adaptation of CNNs, not image recognition** — the
-dataset is never treated as an image, and the CNN has not discovered any
-natural "spatial" relationship the way it would with actual pixels. It is
-included as an experimental/academic deep-learning approach — required by
-the project brief, and useful for comparing deep learning against
-tree-based models — not because tabular features are assumed to have
-image-like structure.
-
-**Is the CNN the "best" model?** Not automatically, and we don't claim
-that. In our testing, Random Forest, the CNN, and even a simple balanced
-Decision Tree each come out ahead on a different metric (F1-score, ROC-AUC,
-and Recall respectively) — they're all genuinely close. The CNN is used to
-produce the final probabilities mainly because the project brief requires
-an advanced deep-learning model, and because it stays competitive with the
-best classical model. The honest, side-by-side numbers are in the README
-and in the dashboard's "Model Performance" page.
+**Which one is used?** Whichever scores higher on ROC-AUC on the held-out
+test customers becomes the "production model" for the dashboard. In the
+shipped run that is Gradient Boosting (ROC-AUC 0.930 vs 0.924) — the two
+are close, and the side-by-side numbers are in the README and on the
+dashboard's "Model Performance" page.
 
 ## What the interaction-pattern and contact-fatigue features do
 
@@ -136,17 +118,17 @@ mistaken for a reliable pattern.
 
 Neither the historical analysis nor the model-predicted scoring is
 connected to a live bank CRM or a real, ongoing customer database. The
-historical pages work off a static, offline dataset; New Customer Analysis
-only proves the scoring path can run on any single row shaped like a UCI
+historical sections work off a static, offline dataset; the "score a new
+customer" form only proves the scoring path can run on any single row shaped like a UCI
 record — it doesn't read from or write to any external system.
 
 ## How it all fits together
 
 ```
-Historical, all customers ──► Executive Overview / Campaign Drivers /
-(actual outcomes)              Customer Segments  (observed conversion rates)
+Historical, all customers ──► Executive overview / Campaign insights
+(actual outcomes)              (observed conversion rates)
 
-Customer data (test split) ──► Preprocessing ──► 1D CNN ──► Conversion Probability
+Customer data (test split) ──► Preprocessing ──► GB / RF ──► Conversion Probability
                                                                     │
                                                                     ▼
                                                     Lead Temperature (HOT/WARM/COLD)
@@ -157,7 +139,7 @@ Contact count     ──► Contact Fatigue rules                          │
                                                     Recommendation (combines all three)
                                                                     │
                                                                     ▼
-                                        Actionable Targeting page / Customer Lookup
+                                        Actionable targeting section
 ```
 
 See `README.md` for the full technical write-up, the honest model

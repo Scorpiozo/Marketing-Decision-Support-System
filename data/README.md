@@ -1,5 +1,7 @@
 # Data folder
 
+> The project only **reads** this file; no script modifies or overwrites it.
+
 This folder should contain `bank-full.csv` — the UCI Bank Marketing dataset
 (45,211 rows, 17 columns, comma-separated, header included).
 
@@ -24,24 +26,11 @@ original UCI file):
      mv bank-full.csv.clean bank-full.csv
      ```
 
-**Option C — use `ucimlrepo`** (if your environment has internet access):
-
-```python
-from ucimlrepo import fetch_ucirepo
-bank_marketing = fetch_ucirepo(id=222)
-X = bank_marketing.data.features
-y = bank_marketing.data.targets
-```
-
-The notebook (`notebooks/bank_marketing_cnn.ipynb`) tries `ucimlrepo` first
-and automatically falls back to this local CSV file if `ucimlrepo` is not
-available or there is no internet connection.
-
 ## Note on redistribution
 
 This project does not redistribute the raw UCI dataset outside of this
 `data/` folder — it's included here purely as a convenience for running the
-notebook and scripts offline. Please refer to the UCI Machine Learning
+scripts offline. Please refer to the UCI Machine Learning
 Repository's citation and usage terms if you redistribute this project.
 
 Citation: S. Moro, P. Cortez and P. Rita. "A Data-Driven Approach to
