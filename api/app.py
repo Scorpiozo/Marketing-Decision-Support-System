@@ -1,7 +1,7 @@
 """
 Lightweight Flask API + static frontend for the Bank Marketing DSS.
 
-    python run.py                 # http://127.0.0.1:5000
+    python run.py
 
 Endpoints (all GET unless noted; filter params may repeat, e.g. job=student&job=retired):
 
@@ -83,8 +83,6 @@ def create_app(service=None):
             resp.headers["Cache-Control"] = "no-store"
         return resp
 
-    # API
-
     @app.get("/api/health")
     def health():
         return jsonify(status="ok", startup_seconds=svc().startup_seconds,
@@ -143,8 +141,6 @@ def create_app(service=None):
     def models():
         return jsonify(svc().model_report())
 
-    # Frontend (static files)
-
     @app.get("/")
     def index():
         return send_from_directory(FRONTEND_DIR, "index.html")
@@ -152,8 +148,6 @@ def create_app(service=None):
     @app.get("/<path:path>")
     def static_files(path):
         if path.startswith("api/"):
-            # An API path reached the static catch-all: 405 if the endpoint exists
-            # for another method (e.g. GET /api/predict), else JSON 404.
             adapter = app.url_map.bind("localhost")
             for method in ("POST", "PUT", "PATCH", "DELETE"):
                 try:

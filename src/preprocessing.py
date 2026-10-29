@@ -19,8 +19,6 @@ CAMPAIGN_CATEGORICAL_FEATURES = ["contact", "month", "poutcome"]
 
 CATEGORICAL_FEATURES = CUSTOMER_CATEGORICAL_FEATURES + CAMPAIGN_CATEGORICAL_FEATURES
 
-# Group order defines the engineered feature order (numeric first, then
-# customer categoricals, then campaign/contact categoricals). Do not reorder.
 FEATURE_GROUPS = {
     "1_numerical_customer_features": NUMERIC_FEATURES,
     "2_customer_categorical_features": CUSTOMER_CATEGORICAL_FEATURES,

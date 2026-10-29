@@ -32,8 +32,6 @@ def classify_contact_fatigue(campaign_count):
 
 
 
-# Marketing recommendation logic
-
 def recommend_action(lead_temperature, interaction_pattern, contact_fatigue="LOW"):
     if lead_temperature == "HOT":
         if contact_fatigue == "HIGH":

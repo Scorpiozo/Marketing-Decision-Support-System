@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Bank Marketing Decision Support System - macOS/Linux launcher
-# 1. install dependencies  2. train both models if needed  3. start the dashboard
 set -euo pipefail
 cd "$(dirname "$0")"
 

@@ -1,11 +1,4 @@
 @echo off
-REM
-REM  Bank Marketing Decision Support System - Windows launcher
-REM
-REM  1. Installs dependencies from requirements.txt
-REM  2. Trains Gradient Boosting + Random Forest if no trained models exist
-REM  3. Starts the dashboard at http://localhost:5000
-REM
 cd /d "%~dp0"
 
 echo.

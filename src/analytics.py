@@ -34,7 +34,7 @@ def add_age_group(age_series):
 
 
 def load_campaign_dataset(data_path=DATA_PATH):
-    df = clean_data(load_raw_data(data_path))  # clean_data already returns a copy
+    df = clean_data(load_raw_data(data_path))
 
     df["converted"] = (df["y"].astype(str).str.lower() == "yes").astype(int)
     df["age_group"] = add_age_group(df["age"])

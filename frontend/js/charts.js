@@ -1,16 +1,3 @@
-/*
- * Minimal, dependency-free SVG/HTML charts for the dashboard.
- *
- *   Charts.bar(el, opts)      vertical bars (rates, counts, histograms)
- *   Charts.hbar(el, opts)     horizontal bars in HTML (long labels wrap)
- *   Charts.pairs(el, opts)    two-series horizontal bars (model vs model)
- *   Charts.line(el, opts)     multi-series line chart (ROC curves)
- *   Charts.grouped(el, opts)  grouped vertical bars (metric comparison)
- *   Charts.table(el, cols, rows)
- *
- * Colours are CSS custom properties, so light/dark themes switch without
- * re-rendering. Every chart re-renders on container resize.
- */
 (function () {
   "use strict";
 
@@ -55,14 +42,12 @@
     return ticks;
   }
 
-  // Bar with 4px rounded data-end, square at the baseline.
   function barPath(x, y, w, h, r) {
     r = Math.min(r, w / 2, h);
     if (h <= 0) return "";
     return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
   }
 
-  // Tooltip (single shared element)
   let tip;
   function tooltip() {
     if (!tip) {
@@ -103,11 +88,6 @@
     el.appendChild(p);
   }
 
-  /* Vertical bars.
-   * opts.rows: [{label, value, color?, faded?, tip?}]
-   * opts.format(v), opts.height, opts.refLine {value, label}, opts.yMax,
-   * opts.markers [{at: index boundary (float), label}]  (vertical guides)
-   */
   function bar(el, opts) {
     const rows = opts.rows || [];
     if (!rows.length) return empty(el, opts.emptyText);
@@ -125,7 +105,6 @@
       const plotW = width - m.left - m.right;
       const plotH = height - m.top - m.bottom;
       let maxVal = Math.max(opts.yMax || 0, ...rows.map((r) => r.value), opts.refLine ? opts.refLine.value : 0);
-      // Clip one dominant bar so the rest stay readable (its true value is labelled).
       let clipAt = null;
       if (opts.clip) {
         const sorted = rows.map((r) => r.value).sort((a, b) => b - a);
@@ -159,7 +138,6 @@
           const vt = svgEl("text", { x: x + w + 4, y: y(top) + 10, class: "bar-value" }, g);
           vt.textContent = fmt(r.value);
         }
-        // Hit target taller than the mark
         const hit = svgEl("rect", { x: m.left + i * band, y: m.top, width: band, height: plotH, class: "hit" }, g);
         const html = r.tip || `<strong>${esc(r.label)}</strong><br>${esc(fmt(r.value))}`;
         hit.addEventListener("mousemove", (e) => { g.classList.add("is-hover"); showTip(html, e); });
@@ -193,7 +171,6 @@
       if (opts.refLine) {
         const ry = y(opts.refLine.value);
         svgEl("line", { x1: m.left, x2: width - m.right, y1: ry, y2: ry, class: "ref-line" }, svg);
-        // Key above the plot, so it never collides with bars
         const t = svgEl("text", { x: width - m.right, y: 12, class: "ref-label", "text-anchor": "end" }, svg);
         t.textContent = opts.refLine.label;
         const tw = opts.refLine.label.length * 6.3;
@@ -202,7 +179,6 @@
     });
   }
 
-  /* Horizontal bars in HTML. rows: [{label, value, display?, color?, onClick?}] */
   function hbar(el, opts) {
     const rows = opts.rows || [];
     if (!rows.length) return empty(el, opts.emptyText);
@@ -223,7 +199,6 @@
     el.appendChild(list);
   }
 
-  /* Two series per row, horizontal. rows: [{label, values:[a,b]}], series:[{name,color}] */
   function pairs(el, opts) {
     const rows = opts.rows || [];
     if (!rows.length) return empty(el);
@@ -246,7 +221,6 @@
     el.appendChild(list);
   }
 
-  /* Lines. series: [{name, color, points:[[x,y,extra], ...]}]; axes 0..1 */
   function line(el, opts) {
     mount(el, (width) => {
       const height = Math.min(opts.height || 320, width * 0.9);
@@ -298,7 +272,6 @@
     });
   }
 
-  /* Grouped bars. categories: [..], series: [{name,color,values:[..]}] */
   function grouped(el, opts) {
     mount(el, (width) => {
       const height = opts.height || 260;
@@ -306,7 +279,7 @@
       const m = { top: 16, right: 12, bottom: 30, left: 44 };
       const plotW = width - m.left - m.right;
       const plotH = height - m.top - m.bottom;
-      const y = (v) => m.top + plotH - v * plotH; // 0..1 scale
+      const y = (v) => m.top + plotH - v * plotH;
       const svg = svgEl("svg", { viewBox: `0 0 ${width} ${height}`, width, height, role: "img", "aria-label": opts.ariaLabel || "Grouped bar chart" }, el);
       [0, 0.25, 0.5, 0.75, 1].forEach((t) => {
         svgEl("line", { x1: m.left, x2: width - m.right, y1: y(t), y2: y(t), class: t === 0 ? "axis-line" : "grid-line" }, svg);

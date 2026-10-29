@@ -63,11 +63,11 @@ def interaction_pattern_summary(df):
 
 if __name__ == "__main__":
     sample = pd.DataFrame([
-        {"campaign": 2, "previous": 1, "poutcome": "success"},   # Interested
-        {"campaign": 5, "previous": 2, "poutcome": "failure"},   # Repeatedly Contacted
-        {"campaign": 1, "previous": 0, "poutcome": "unknown"},   # No Previous Interaction
-        {"campaign": 2, "previous": 1, "poutcome": "failure"},   # Previously Unsuccessful
-        {"campaign": 2, "previous": 1, "poutcome": "other"},     # Unclear
+        {"campaign": 2, "previous": 1, "poutcome": "success"},
+        {"campaign": 5, "previous": 2, "poutcome": "failure"},
+        {"campaign": 1, "previous": 0, "poutcome": "unknown"},
+        {"campaign": 2, "previous": 1, "poutcome": "failure"},
+        {"campaign": 2, "previous": 1, "poutcome": "other"},
     ])
     result = add_interaction_patterns(sample)
     print(result)

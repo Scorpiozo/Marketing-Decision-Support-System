@@ -1,4 +1,3 @@
-/* Marketing Decision Support - app logic (vanilla JS, talks to the Flask API) */
 (function () {
   "use strict";
 
@@ -20,16 +19,14 @@
   const state = {
     meta: null,
     section: "overview",
-    filters: {},            // key -> Set(values)
-    model: null,            // targeting model key
+    filters: {},
+    model: null,
     segment: "job",
     table: { q: "", temperature: "", fatigue: "", sort: "probability", order: "desc", page: 1, pageSize: 25 },
     dirty: { overview: true, insights: true, targeting: true, models: true },
-    charts: {},             // chart id -> {draw, table}
-    tableView: new Set(),   // chart ids currently shown as tables
+    charts: {},
+    tableView: new Set(),
   };
-
-  // API
 
   const controllers = {};
   function query(params, withFilters = true) {
@@ -54,7 +51,7 @@
       body: body ? JSON.stringify(body) : undefined,
     });
     let data = null;
-    try { data = await res.json(); } catch (_) { /* non-JSON */ }
+    try { data = await res.json(); } catch (_) {}
     if (!res.ok) throw new Error((data && data.error) || `Request failed (${res.status})`);
     return data;
   }
@@ -68,8 +65,6 @@
     box.hidden = false;
   }
   function clearError() { $("#global-error").hidden = true; }
-
-  // Charts with a table toggle
 
   function chart(id, draw, table) {
     state.charts[id] = { draw, table };
@@ -118,8 +113,6 @@
       ariaLabel: `Conversion rate by ${label}`,
     }), { columns: RATE_COLUMNS(label), rows });
   }
-
-  // Filters
 
   function activeFilterCount() {
     return Object.values(state.filters).reduce((a, s) => a + s.size, 0);
@@ -218,8 +211,6 @@
     filterTimer = setTimeout(() => load(state.section), 120);
   }
 
-  // Sections
-
   function route() {
     const name = (location.hash || "#overview").slice(1);
     const section = SECTIONS[name] ? name : "overview";
@@ -264,8 +255,6 @@
       el.classList.remove("is-loading");
     }
   }
-
-  // Executive overview
 
   async function loadOverview() {
     const [ov, tg] = await Promise.all([
@@ -334,8 +323,6 @@
   }
   const capital = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
-  // Campaign insights
-
   function buildInsights() {
     const wrap = $("#drivers");
     wrap.innerHTML = state.meta.drivers.map((d) => `
@@ -370,8 +357,6 @@
     const seg = await api("insights/segments", { slot: "segment", params: { segment: state.segment } });
     rateChart("seg-chart", seg.rows, seg.label);
   }
-
-  // Actionable targeting
 
   function buildTargeting() {
     const picker = $("#model-picker");
@@ -591,8 +576,6 @@
     }
   }
 
-  // Score a new customer
-
   const FORM_DEFAULTS = { age: 35, balance: 1000, day: 15, duration: 180, campaign: 2, pdays: -1, previous: 0,
     job: "management", marital: "married", education: "secondary", default: "no", housing: "yes", loan: "no",
     contact: "cellular", month: "may", poutcome: "unknown" };
@@ -651,8 +634,6 @@
     $("#score-dialog").showModal();
   }
 
-  // Model performance
-
   async function loadModels() {
     const r = await api("models", { slot: "models", filters: false });
     const models = state.meta.models;
@@ -703,8 +684,6 @@
         </div></div>`;
     }).join("");
   }
-
-  // Boot
 
   async function init() {
     try {

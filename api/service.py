@@ -31,7 +31,6 @@ from src.prediction import (
     build_prediction_dataframe, predict_single_customer,
 )
 
-# Global filters shared by Overview, Campaign Insights and Targeting.
 FILTER_FIELDS = OrderedDict([
     ("age_group", "Age group"),
     ("job", "Job"),
@@ -43,7 +42,6 @@ FILTER_FIELDS = OrderedDict([
     ("poutcome", "Previous outcome"),
 ])
 
-# Campaign drivers: column -> (label, explicit order or None = sort by rate)
 DRIVERS = OrderedDict([
     ("month", ("Month of last contact", analytics.MONTH_ORDER)),
     ("contacts_bucket", ("Contacts in current campaign", analytics.CAMPAIGN_LABELS)),
@@ -60,7 +58,6 @@ SORTABLE = {"probability": "conversion_probability", "age": "age", "balance": "b
 TEMPERATURES = ["HOT", "WARM", "COLD"]
 FATIGUE_LEVELS = ["LOW", "MEDIUM", "HIGH"]
 
-# Numeric inputs for single-customer scoring: (min, max) inclusive.
 NUMERIC_INPUT_RANGES = OrderedDict([
     ("age", (18, 100)),
     ("balance", (-10000, 150000)),
@@ -71,7 +68,7 @@ NUMERIC_INPUT_RANGES = OrderedDict([
     ("previous", (0, 275)),
 ])
 
-HISTOGRAM_BIN_WIDTH = 0.05  # 0.40 and 0.70 thresholds fall on bin edges
+HISTOGRAM_BIN_WIDTH = 0.05
 
 
 class ValidationError(ValueError):
@@ -123,10 +120,8 @@ class DashboardService:
     def __init__(self):
         t0 = time.perf_counter()
 
-        # Historical data (all 45,211 customers, real outcomes)
         self.campaign_df = analytics.load_campaign_dataset()
 
-        # Saved artifacts
         self.preprocessor = prep.load_preprocessor()
         prep.validate_feature_order(self.preprocessor)
         self.categorical_options = prep.get_categorical_options(self.preprocessor)
@@ -134,7 +129,6 @@ class DashboardService:
         self.production_key = self.production_info["model_key"]
         self.models = {key: mdl.load_model(key) for key in mdl.MODEL_REGISTRY}
 
-        # Held-out test split, rebuilt with the training split parameters
         raw = prep.encode_target(prep.clean_data(prep.load_raw_data()))
         _, X_test, _, y_test = prep.train_test_split_data(raw)
         self.y_test = y_test.values
@@ -148,7 +142,7 @@ class DashboardService:
             self.test_probs[key] = probs
             df = build_prediction_dataframe(X_test, probs)
             df["age_group"] = analytics.add_age_group(df["age"]).astype(str)
-            df.index = df["customer_record_id"].to_numpy()  # O(1) lookup by record ID
+            df.index = df["customer_record_id"].to_numpy()
             self.predictions[key] = df
 
         self.filter_options = OrderedDict()
@@ -163,8 +157,6 @@ class DashboardService:
         self._memo = _Memo()
         self._model_report = None
         self.startup_seconds = round(time.perf_counter() - t0, 2)
-
-    # Input parsing / validation
 
     def parse_filters(self, getlist):
         """Build a canonical, hashable filters tuple from a ``getlist`` callable."""
@@ -192,8 +184,6 @@ class DashboardService:
     @staticmethod
     def _apply(df, filters):
         return analytics.apply_filters(df, {col: list(vals) for col, vals in filters})
-
-    # Endpoints
 
     def meta(self):
         return {

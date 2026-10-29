@@ -1,9 +1,9 @@
 """
 Start the Bank Marketing dashboard (Flask API + HTML/CSS/JS frontend).
 
-    python run.py                       # http://127.0.0.1:5000
+    python run.py
     python run.py --port 8080
-    python run.py --host 0.0.0.0        # reachable from other machines on your network
+    python run.py --host 0.0.0.0
 
 Requires the trained artifacts in models/ and outputs/ (they ship with the
 project; regenerate with `python train_and_evaluate.py`).
@@ -15,7 +15,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from api.app import create_app  # noqa: E402
+from api.app import create_app
 
 
 def main(argv=None):
@@ -30,8 +30,6 @@ def main(argv=None):
     print(f"Ready in {app.config['SERVICE'].startup_seconds}s. "
           f"Open http://{'localhost' if args.host in ('127.0.0.1', '0.0.0.0') else args.host}:{args.port}",
           flush=True)
-    # threaded=True: concurrent requests share the single loaded service.
-    # use_reloader=False: the reloader would load data/models twice.
     app.run(host=args.host, port=args.port, debug=args.debug, threaded=True, use_reloader=False)
 
 

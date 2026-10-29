@@ -43,9 +43,6 @@ def train_random_forest(X_train, y_train):
 
 
 def train_gradient_boosting(X_train, y_train):
-    # GradientBoostingClassifier has no class_weight argument; balanced
-    # sample weights give the same ~88/12 imbalance handling used by the
-    # Random Forest.
     model = GradientBoostingClassifier(
         n_estimators=300,
         learning_rate=0.1,
@@ -57,7 +54,6 @@ def train_gradient_boosting(X_train, y_train):
     return model
 
 
-# Single source of truth for the supported models.
 MODEL_REGISTRY = {
     "gradient_boosting": {
         "display_name": "Gradient Boosting",
@@ -89,8 +85,6 @@ def predict_proba(model, X):
     return model.predict_proba(np.asarray(X))[:, 1]
 
 
-# Evaluation
-
 def evaluate_model(y_true, y_pred, y_prob=None, model_name="model"):
     metrics = {
         "Model": model_name,
@@ -108,8 +102,6 @@ def evaluate_model(y_true, y_pred, y_prob=None, model_name="model"):
 def get_confusion_matrix(y_true, y_pred):
     return confusion_matrix(y_true, y_pred)
 
-
-# Persistence
 
 def save_model(model, model_key, models_dir=MODELS_DIR):
     path = model_path(model_key, models_dir)
@@ -160,8 +152,6 @@ def load_production_model(models_dir=MODELS_DIR, info_path=PRODUCTION_MODEL_PATH
     return load_model(info["model_key"], models_dir), info
 
 
-# Evaluation details for the API / reports
-
 def roc_points(y_true, y_prob, max_points=120):
     """ROC curve downsampled to at most ``max_points`` (fpr, tpr, threshold) rows."""
     from sklearn.metrics import roc_curve
@@ -170,7 +160,7 @@ def roc_points(y_true, y_prob, max_points=120):
     if len(fpr) > max_points:
         idx = np.unique(np.linspace(0, len(fpr) - 1, max_points).round().astype(int))
         fpr, tpr, thr = fpr[idx], tpr[idx], thr[idx]
-    thr = np.clip(thr, 0.0, 1.0)  # sklearn's first threshold is +inf
+    thr = np.clip(thr, 0.0, 1.0)
     return [[round(float(a), 4), round(float(b), 4), round(float(c), 4)] for a, b, c in zip(fpr, tpr, thr)]
 
 
