@@ -25,8 +25,6 @@ and plain-English next-action recommendations.
   <a href="#-limitations">Limitations</a>
 </p>
 
-<img src="docs/screenshots/executive-overview.png" alt="Executive overview section of the dashboard" width="900">
-
 </div>
 
 ---
@@ -83,24 +81,20 @@ A bank runs phone campaigns to sell term deposits. Calling everyone is expensive
 <table>
   <tr>
     <td width="50%" align="center">
-      <img src="docs/screenshots/executive-overview.png" alt="Executive overview"><br>
       <b>Executive overview</b><br>
       <sub>Headline conversion, monthly trends, lead snapshot</sub>
     </td>
     <td width="50%" align="center">
-      <img src="docs/screenshots/campaign-insights.png" alt="Campaign insights"><br>
       <b>Campaign insights</b><br>
       <sub>Conversion drivers and customer segments</sub>
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
-      <img src="docs/screenshots/actionable-targeting.png" alt="Actionable targeting"><br>
       <b>Actionable targeting</b><br>
       <sub>Ranked leads, recommendations, score a new customer</sub>
     </td>
     <td width="50%" align="center">
-      <img src="docs/screenshots/model-performance.png" alt="Model performance"><br>
       <b>Model performance</b><br>
       <sub>Metrics, ROC, confusion matrices, feature importance</sub>
     </td>
